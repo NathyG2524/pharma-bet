@@ -1,0 +1,41 @@
+{
+  "name": "@drug-store/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "clean": "rm -rf dist",
+    "typeorm:cli": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./src/typeorm-config.ts",
+    "migration:run": "pnpm run typeorm:cli migration:run",
+    "migration:generate": "pnpm run build && pnpm run typeorm:cli migration:generate src/migrations/AddPatientTables",
+    "migration:revert": "pnpm run typeorm:cli migration:revert"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.16",
+    "@nestjs/core": "^11.1.16",
+    "@nestjs/platform-express": "^11.1.16",
+    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "dotenv": "^17.3.1",
+    "pg": "^8.20.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.16",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.5",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}
