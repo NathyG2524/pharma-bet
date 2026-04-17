@@ -26,6 +26,7 @@ export default function MedicineDetailPage() {
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const medicineId = medicine?.id;
 
   const loadMedicine = useCallback(async () => {
     if (!id) return;
@@ -47,7 +48,7 @@ export default function MedicineDetailPage() {
   }, [loadMedicine]);
 
   useEffect(() => {
-    if (!id || !medicine) return;
+    if (!id || !medicineId) return;
     void (async () => {
       setTxLoading(true);
       try {
@@ -63,7 +64,7 @@ export default function MedicineDetailPage() {
         setTxLoading(false);
       }
     })();
-  }, [id, medicine]);
+  }, [id, medicineId]);
 
   const loadMore = async () => {
     if (!id || txLoading || transactions.length >= totalTx) return;
