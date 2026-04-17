@@ -34,7 +34,15 @@ export function CommandPalette() {
     >
       <div
         className="fixed inset-0 bg-on_surface/30 backdrop-blur-sm -z-10"
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setOpen(false);
+          }
+        }}
       />
 
       <div className="overflow-hidden rounded-xl glass-panel shadow-tonal border border-outline_variant/20 w-full max-w-2xl transform transition-all">

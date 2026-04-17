@@ -6,12 +6,23 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Branch } from "./branch.entity";
 import { Patient } from "./patient.entity";
 
 @Entity({ name: "patient_history" })
 export class PatientHistory {
   @PrimaryGeneratedColumn("uuid")
   id: string;
+
+  @Column({ type: "uuid" })
+  tenantId: string;
+
+  @Column({ type: "uuid" })
+  branchId: string;
+
+  @ManyToOne(() => Branch, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "branchId" })
+  branch: Branch;
 
   @Column({ type: "uuid" })
   patientId: string;

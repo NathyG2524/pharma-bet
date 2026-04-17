@@ -15,5 +15,16 @@ export type {
   BuyMedicineInput,
   SellMedicineInput,
 } from "./types/medicine";
+export type {
+  BranchDto,
+  CreateBranchInput,
+  CreateTenantInput,
+  MembershipDto,
+  AssignMembershipInput,
+  TenantDto,
+  UserRole,
+} from "./types/tenancy";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
+export { BranchesApi, branchesApi } from "./lib/branchesApi";
+export { TenantsApi, tenantsApi } from "./lib/tenantsApi";

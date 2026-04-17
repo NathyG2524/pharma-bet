@@ -20,9 +20,11 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 
 export class MedicinesApi {
   private apiBaseUrl: string | null = null;
+  private getAuthHeaders?: () => Record<string, string>;
 
-  configure(options: { apiBaseUrl?: string }) {
+  configure(options: { apiBaseUrl?: string; getAuthHeaders?: () => Record<string, string> }) {
     this.apiBaseUrl = options.apiBaseUrl ?? null;
+    this.getAuthHeaders = options.getAuthHeaders;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -30,10 +32,12 @@ export class MedicinesApi {
       throw new Error("Medicines API not configured (apiBaseUrl required)");
     }
     const url = `${this.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+    const authHeaders = this.getAuthHeaders?.() ?? {};
     const res = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...(options.headers as Record<string, string>),
       },
     });

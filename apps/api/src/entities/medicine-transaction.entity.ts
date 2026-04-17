@@ -2,10 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Branch } from "./branch.entity";
 import { Medicine } from "./medicine.entity";
 import { Patient } from "./patient.entity";
 
@@ -15,9 +17,20 @@ export enum MedicineTransactionType {
 }
 
 @Entity({ name: "medicine_transactions" })
+@Index("IDX_medicine_transactions_tenant_branch", ["tenantId", "branchId"])
 export class MedicineTransaction {
   @PrimaryGeneratedColumn("uuid")
   id: string;
+
+  @Column({ type: "uuid" })
+  tenantId: string;
+
+  @Column({ type: "uuid" })
+  branchId: string;
+
+  @ManyToOne(() => Branch, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "branchId" })
+  branch: Branch;
 
   @Column({ type: "uuid" })
   medicineId: string;

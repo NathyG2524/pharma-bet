@@ -63,7 +63,7 @@ export default function MedicineDetailPage() {
         setTxLoading(false);
       }
     })();
-  }, [id, medicine?.id]);
+  }, [id, medicine]);
 
   const loadMore = async () => {
     if (!id || txLoading || transactions.length >= totalTx) return;
@@ -120,12 +120,12 @@ export default function MedicineDetailPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/inventory/buy`}>
+          <Link href="/inventory/buy">
             <Button type="button" size="sm">
               Buy
             </Button>
           </Link>
-          <Link href={`/inventory/sell`}>
+          <Link href="/inventory/sell">
             <Button type="button" size="sm" variant="outline">
               Sell
             </Button>
