@@ -15,7 +15,7 @@ const defaultState: DevAuthState = {
   tenantId: "",
   roles: ["hq_admin"],
   branchIds: [],
-  activeBranchId: "",
+  activeBranchId: null,
 };
 
 export const readAuthState = (): DevAuthState => {
@@ -28,11 +28,16 @@ export const readAuthState = (): DevAuthState => {
       return defaultState;
     }
     const parsed = JSON.parse(raw) as Partial<DevAuthState>;
+    const normalizedActiveBranchId =
+      typeof parsed.activeBranchId === "string"
+        ? parsed.activeBranchId.trim() || null
+        : (parsed.activeBranchId ?? defaultState.activeBranchId);
     return {
       ...defaultState,
       ...parsed,
       roles: Array.isArray(parsed.roles) ? (parsed.roles as UserRole[]) : defaultState.roles,
       branchIds: Array.isArray(parsed.branchIds) ? parsed.branchIds : defaultState.branchIds,
+      activeBranchId: normalizedActiveBranchId,
     };
   } catch {
     return defaultState;
