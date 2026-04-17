@@ -1,4 +1,5 @@
 import { AlertTriangle, Clock, TrendingUp, Users } from "lucide-react";
+import type { ComponentType } from "react";
 
 export default function DashboardOverview() {
   return (
@@ -68,6 +69,28 @@ export default function DashboardOverview() {
   );
 }
 
+type StatCardProps = {
+  title: string;
+  value: string;
+  trend: string;
+  icon: ComponentType<{ className?: string }>;
+  trendUp: boolean;
+  iconBg?: string;
+  iconColor?: string;
+};
+
+type TransactionItemProps = {
+  name: string;
+  time: string;
+  amount: string;
+};
+
+type AlertItemProps = {
+  name: string;
+  stock: string;
+  status: "Critical" | "Warning";
+};
+
 function StatCard({
   title,
   value,
@@ -76,7 +99,7 @@ function StatCard({
   trendUp,
   iconBg = "bg-secondary_container/40",
   iconColor = "text-on_secondary_container",
-}: any) {
+}: StatCardProps) {
   return (
     <div className="rounded-xl bg-surface_container_lowest p-6 transition-colors hover:bg-surface_container_high">
       <div className="flex items-center justify-between">
@@ -89,7 +112,9 @@ function StatCard({
         <span className="text-3xl font-bold text-on_surface">{value}</span>
       </div>
       <div className="mt-1 flex items-center">
-        <span className={`text-sm ${trendUp ? "text-on_secondary_container" : "text-on_surface_variant"}`}>
+        <span
+          className={`text-sm ${trendUp ? "text-on_secondary_container" : "text-on_surface_variant"}`}
+        >
           {trend}
         </span>
       </div>
@@ -97,7 +122,7 @@ function StatCard({
   );
 }
 
-function TransactionItem({ name, time, amount }: any) {
+function TransactionItem({ name, time, amount }: TransactionItemProps) {
   return (
     <div className="flex items-center justify-between pb-4 last:pb-0 font-medium">
       <div>
@@ -111,7 +136,7 @@ function TransactionItem({ name, time, amount }: any) {
   );
 }
 
-function AlertItem({ name, stock, status }: any) {
+function AlertItem({ name, stock, status }: AlertItemProps) {
   const isCritical = status === "Critical";
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-surface_container_low hover:bg-surface_container_high transition-colors">

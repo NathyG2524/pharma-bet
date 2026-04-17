@@ -1,4 +1,5 @@
-import { medicinesApi, patientsApi } from "@drug-store/shared";
+import { branchesApi, medicinesApi, patientsApi, tenantsApi } from "@drug-store/shared";
+import { getAuthHeaders } from "./auth-storage";
 
 const apiUrl =
   typeof process !== "undefined"
@@ -7,8 +8,11 @@ const apiUrl =
     : "";
 
 if (apiUrl) {
-  patientsApi.configure({ apiBaseUrl: apiUrl });
-  medicinesApi.configure({ apiBaseUrl: apiUrl });
+  const options = { apiBaseUrl: apiUrl, getAuthHeaders };
+  patientsApi.configure(options);
+  medicinesApi.configure(options);
+  branchesApi.configure(options);
+  tenantsApi.configure(options);
 }
 
-export { patientsApi, medicinesApi };
+export { patientsApi, medicinesApi, branchesApi, tenantsApi };

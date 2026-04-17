@@ -7,6 +7,7 @@ import {
 } from "../../../entities/medicine-transaction.entity";
 import { Medicine } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
+import type { AuthContext } from "../../tenancy/auth-context";
 import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
 import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
 import type { CreateMedicineDto, UpdateMedicineDto } from "../dto/medicine.dto";
@@ -25,15 +26,28 @@ export class MedicinesService {
     private readonly patientRepo: Repository<Patient>,
   ) {}
 
-  async list(options: {
-    search?: string;
-    limit?: number;
-    offset?: number;
-    includeInactive?: boolean;
-  }): Promise<{ items: Medicine[]; total: number }> {
+  private getBranchScope(context: AuthContext) {
+    if (!context.tenantId || !context.activeBranchId) {
+      throw new NotFoundException("Active branch context required");
+    }
+    return { tenantId: context.tenantId, branchId: context.activeBranchId };
+  }
+
+  async list(
+    context: AuthContext,
+    options: {
+      search?: string;
+      limit?: number;
+      offset?: number;
+      includeInactive?: boolean;
+    },
+  ): Promise<{ items: Medicine[]; total: number }> {
     const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
     const offset = Math.max(0, options.offset ?? 0);
+    const scope = this.getBranchScope(context);
     const qb = this.medicineRepo.createQueryBuilder("m");
+    qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
+    qb.andWhere("m.branchId = :branchId", { branchId: scope.branchId });
     if (!options.includeInactive) {
       qb.andWhere("m.isActive = :active", { active: true });
     }
@@ -47,21 +61,29 @@ export class MedicinesService {
     return { items, total };
   }
 
-  async findOne(id: string): Promise<Medicine> {
-    const medicine = await this.medicineRepo.findOne({ where: { id } });
+  async findOne(context: AuthContext, id: string): Promise<Medicine> {
+    const scope = this.getBranchScope(context);
+    const medicine = await this.medicineRepo.findOne({
+      where: { id, tenantId: scope.tenantId, branchId: scope.branchId },
+    });
     if (!medicine) {
       throw new NotFoundException(`Medicine ${id} not found`);
     }
     return medicine;
   }
 
-  async create(dto: CreateMedicineDto): Promise<Medicine> {
+  async create(context: AuthContext, dto: CreateMedicineDto): Promise<Medicine> {
     const name = dto.name.trim();
-    const exists = await this.medicineRepo.exists({ where: { name } });
+    const scope = this.getBranchScope(context);
+    const exists = await this.medicineRepo.exists({
+      where: { name, tenantId: scope.tenantId, branchId: scope.branchId },
+    });
     if (exists) {
       throw new ConflictException("A medicine with this name already exists");
     }
     const medicine = this.medicineRepo.create({
+      tenantId: scope.tenantId,
+      branchId: scope.branchId,
       name,
       sku: dto.sku?.trim() || null,
       unit: dto.unit?.trim() || null,
@@ -71,11 +93,14 @@ export class MedicinesService {
     return this.medicineRepo.save(medicine);
   }
 
-  async update(id: string, dto: UpdateMedicineDto): Promise<Medicine> {
-    const medicine = await this.findOne(id);
+  async update(context: AuthContext, id: string, dto: UpdateMedicineDto): Promise<Medicine> {
+    const scope = this.getBranchScope(context);
+    const medicine = await this.findOne(context, id);
     if (dto.name !== undefined) {
       const name = dto.name.trim();
-      const other = await this.medicineRepo.findOne({ where: { name } });
+      const other = await this.medicineRepo.findOne({
+        where: { name, tenantId: scope.tenantId, branchId: scope.branchId },
+      });
       if (other && other.id !== id) {
         throw new ConflictException("A medicine with this name already exists");
       }
@@ -93,12 +118,17 @@ export class MedicinesService {
     return this.medicineRepo.save(medicine);
   }
 
-  async buy(medicineId: string, dto: BuyMedicineDto): Promise<MedicineTransaction> {
+  async buy(
+    context: AuthContext,
+    medicineId: string,
+    dto: BuyMedicineDto,
+  ): Promise<MedicineTransaction> {
+    const scope = this.getBranchScope(context);
     return this.medicineRepo.manager.transaction(async (manager) => {
       const medRepo = manager.getRepository(Medicine);
       const transactionRepo = manager.getRepository(MedicineTransaction);
       const medicine = await medRepo.findOne({
-        where: { id: medicineId },
+        where: { id: medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
         lock: { mode: "pessimistic_write" },
       });
       if (!medicine) {
@@ -107,6 +137,8 @@ export class MedicinesService {
       medicine.stockQuantity += dto.quantity;
       await medRepo.save(medicine);
       const row = transactionRepo.create({
+        tenantId: scope.tenantId,
+        branchId: scope.branchId,
         medicineId,
         type: MedicineTransactionType.BUY,
         quantity: dto.quantity,
@@ -119,13 +151,18 @@ export class MedicinesService {
     });
   }
 
-  async sell(medicineId: string, dto: SellMedicineDto): Promise<MedicineTransaction> {
+  async sell(
+    context: AuthContext,
+    medicineId: string,
+    dto: SellMedicineDto,
+  ): Promise<MedicineTransaction> {
+    const scope = this.getBranchScope(context);
     return this.medicineRepo.manager.transaction(async (manager) => {
       const medRepo = manager.getRepository(Medicine);
       const transactionRepo = manager.getRepository(MedicineTransaction);
       const patRepo = manager.getRepository(Patient);
       const medicine = await medRepo.findOne({
-        where: { id: medicineId },
+        where: { id: medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
         lock: { mode: "pessimistic_write" },
       });
       if (!medicine) {
@@ -133,7 +170,9 @@ export class MedicinesService {
       }
       let patientId: string | null = null;
       if (dto.patientId) {
-        const ok = await patRepo.exists({ where: { id: dto.patientId } });
+        const ok = await patRepo.exists({
+          where: { id: dto.patientId, tenantId: scope.tenantId, branchId: scope.branchId },
+        });
         if (!ok) {
           throw new NotFoundException(`Patient ${dto.patientId} not found`);
         }
@@ -145,6 +184,8 @@ export class MedicinesService {
       medicine.stockQuantity -= dto.quantity;
       await medRepo.save(medicine);
       const row = transactionRepo.create({
+        tenantId: scope.tenantId,
+        branchId: scope.branchId,
         medicineId,
         type: MedicineTransactionType.SELL,
         quantity: dto.quantity,
@@ -158,14 +199,16 @@ export class MedicinesService {
   }
 
   async getTransactions(
+    context: AuthContext,
     medicineId: string,
     options: { limit?: number; offset?: number },
   ): Promise<{ items: MedicineTransaction[]; total: number }> {
-    await this.findOne(medicineId);
+    const scope = this.getBranchScope(context);
+    await this.findOne(context, medicineId);
     const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
     const offset = Math.max(0, options.offset ?? 0);
     const [items, total] = await this.txRepo.findAndCount({
-      where: { medicineId },
+      where: { medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
       relations: { patient: true },
       order: { recordedAt: "DESC" },
       take: limit,

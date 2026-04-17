@@ -15,7 +15,7 @@ import {
 } from "@drug-store/ui";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -34,7 +34,7 @@ export default function PatientDetailPage() {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -46,11 +46,11 @@ export default function PatientDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
   const handleAddReading = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,14 +156,18 @@ export default function PatientDetailPage() {
           {showAddForm && (
             <form
               onSubmit={handleAddReading}
-                className="mb-6 rounded-lg bg-surface_container_low p-4"
+              className="mb-6 rounded-lg bg-surface_container_low p-4"
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="history-recorded-at"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
                     Date & time
                   </label>
                   <Input
+                    id="history-recorded-at"
                     type="datetime-local"
                     value={addRecordedAt}
                     onChange={(e) => setAddRecordedAt(e.target.value)}
@@ -171,11 +175,15 @@ export default function PatientDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="history-bp-systolic"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
                     Blood pressure (systolic / diastolic)
                   </label>
                   <div className="flex gap-2">
                     <Input
+                      id="history-bp-systolic"
                       type="number"
                       min={0}
                       placeholder="120"
@@ -184,6 +192,7 @@ export default function PatientDetailPage() {
                     />
                     <span className="self-center text-on_surface_variant/60">/</span>
                     <Input
+                      id="history-bp-diastolic"
                       type="number"
                       min={0}
                       placeholder="80"
@@ -194,8 +203,14 @@ export default function PatientDetailPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
+                <label
+                  htmlFor="history-notes"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Notes
+                </label>
                 <Textarea
+                  id="history-notes"
                   placeholder="Optional notes"
                   value={addNotes}
                   onChange={(e) => setAddNotes(e.target.value)}

@@ -1,12 +1,11 @@
 import type {
-  CreatePatientHistoryInput,
-  CreatePatientInput,
-  PatientDto,
-  PatientHistoryDto,
-  PatientWithHistoryDto,
-} from "../types/patient";
+  AssignMembershipInput,
+  BranchDto,
+  CreateBranchInput,
+  MembershipDto,
+} from "../types/tenancy";
 
-export class PatientsApi {
+export class BranchesApi {
   private apiBaseUrl: string | null = null;
   private getAuthHeaders?: () => Record<string, string>;
 
@@ -17,7 +16,7 @@ export class PatientsApi {
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (!this.apiBaseUrl) {
-      throw new Error("Patients API not configured (apiBaseUrl required)");
+      throw new Error("Branches API not configured (apiBaseUrl required)");
     }
     const url = `${this.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
     const authHeaders = this.getAuthHeaders?.() ?? {};
@@ -39,32 +38,23 @@ export class PatientsApi {
     return res.json();
   }
 
-  async getPatientByPhone(phone: string): Promise<PatientWithHistoryDto> {
-    const encoded = encodeURIComponent(phone);
-    return this.request<PatientWithHistoryDto>(`/api/patients/by-phone/${encoded}`);
+  async listBranches(): Promise<BranchDto[]> {
+    return this.request<BranchDto[]>("/api/branches");
   }
 
-  async getPatient(id: string): Promise<PatientDto> {
-    return this.request<PatientDto>(`/api/patients/${id}`);
-  }
-
-  async createPatient(dto: CreatePatientInput): Promise<PatientDto> {
-    return this.request<PatientDto>("/api/patients", {
+  async createBranch(dto: CreateBranchInput): Promise<BranchDto> {
+    return this.request<BranchDto>("/api/branches", {
       method: "POST",
       body: JSON.stringify(dto),
     });
   }
 
-  async getHistory(patientId: string): Promise<PatientHistoryDto[]> {
-    return this.request<PatientHistoryDto[]>(`/api/patients/${patientId}/history`);
-  }
-
-  async addHistory(patientId: string, dto: CreatePatientHistoryInput): Promise<PatientHistoryDto> {
-    return this.request<PatientHistoryDto>(`/api/patients/${patientId}/history`, {
+  async assignMembership(dto: AssignMembershipInput): Promise<MembershipDto> {
+    return this.request<MembershipDto>("/api/memberships", {
       method: "POST",
       body: JSON.stringify(dto),
     });
   }
 }
 
-export const patientsApi = new PatientsApi();
+export const branchesApi = new BranchesApi();

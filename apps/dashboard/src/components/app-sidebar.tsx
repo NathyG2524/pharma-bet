@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TenantBranchSwitcher } from "./tenant-branch-switcher";
 
 type NavItem = {
   href: string;
@@ -33,6 +34,8 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
+
+const orgLinks: NavItem[] = [{ href: "/organization", label: "Branches & access", icon: Users }];
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -78,6 +81,7 @@ export function AppSidebar() {
       </div>
 
       <nav className="flex-1 space-y-6 overflow-auto px-4 py-8">
+        <TenantBranchSwitcher />
         <div>
           <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant mb-2">
             Dashboard
@@ -106,6 +110,17 @@ export function AppSidebar() {
           </p>
           <div className="space-y-1">
             {inventoryLinks.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant mb-2">
+            Organization
+          </p>
+          <div className="space-y-1">
+            {orgLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>
