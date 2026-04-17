@@ -4,7 +4,7 @@ export type {
   PatientWithHistoryDto,
   CreatePatientInput,
   CreatePatientHistoryInput,
-} from './types/patient';
+} from "./types/patient";
 export type {
   MedicineDto,
   MedicineTransactionDto,
@@ -14,6 +14,6 @@ export type {
   UpdateMedicineInput,
   BuyMedicineInput,
   SellMedicineInput,
-} from './types/medicine';
-export { PatientsApi, patientsApi } from './lib/patientsApi';
-export { MedicinesApi, medicinesApi } from './lib/medicinesApi';
+} from "./types/medicine";
+export { PatientsApi, patientsApi } from "./lib/patientsApi";
+export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";

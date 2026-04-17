@@ -4,7 +4,7 @@ import type {
   PatientDto,
   PatientHistoryDto,
   PatientWithHistoryDto,
-} from '../types/patient';
+} from "../types/patient";
 
 export class PatientsApi {
   private apiBaseUrl: string | null = null;
@@ -13,18 +13,15 @@ export class PatientsApi {
     this.apiBaseUrl = options.apiBaseUrl ?? null;
   }
 
-  private async request<T>(
-    path: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (!this.apiBaseUrl) {
-      throw new Error('Patients API not configured (apiBaseUrl required)');
+      throw new Error("Patients API not configured (apiBaseUrl required)");
     }
-    const url = `${this.apiBaseUrl.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+    const url = `${this.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
     const res = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       },
     });
@@ -32,7 +29,7 @@ export class PatientsApi {
       const text = await res.text();
       throw new Error(`API error: ${res.status} ${text}`);
     }
-    if (res.status === 204 || res.headers.get('content-length') === '0') {
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
       return undefined as T;
     }
     return res.json();
@@ -48,8 +45,8 @@ export class PatientsApi {
   }
 
   async createPatient(dto: CreatePatientInput): Promise<PatientDto> {
-    return this.request<PatientDto>('/api/patients', {
-      method: 'POST',
+    return this.request<PatientDto>("/api/patients", {
+      method: "POST",
       body: JSON.stringify(dto),
     });
   }
@@ -58,12 +55,9 @@ export class PatientsApi {
     return this.request<PatientHistoryDto[]>(`/api/patients/${patientId}/history`);
   }
 
-  async addHistory(
-    patientId: string,
-    dto: CreatePatientHistoryInput,
-  ): Promise<PatientHistoryDto> {
+  async addHistory(patientId: string, dto: CreatePatientHistoryInput): Promise<PatientHistoryDto> {
     return this.request<PatientHistoryDto>(`/api/patients/${patientId}/history`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(dto),
     });
   }

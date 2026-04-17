@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { patientsApi } from "@/lib/api";
+import { parseLocalDateTime } from "@/lib/validation";
+import type { PatientHistoryDto, PatientWithHistoryDto } from "@drug-store/shared";
 import {
   Alert,
   Button,
@@ -12,10 +12,10 @@ import {
   CardTitle,
   Input,
   Textarea,
-} from '@drug-store/ui';
-import { patientsApi } from '@/lib/api';
-import type { PatientWithHistoryDto, PatientHistoryDto } from '@drug-store/shared';
-import { parseLocalDateTime } from '@/lib/validation';
+} from "@drug-store/ui";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -27,12 +27,10 @@ export default function PatientDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addRecordedAt, setAddRecordedAt] = useState(
-    () => new Date().toISOString().slice(0, 16),
-  );
-  const [addSystolic, setAddSystolic] = useState('');
-  const [addDiastolic, setAddDiastolic] = useState('');
-  const [addNotes, setAddNotes] = useState('');
+  const [addRecordedAt, setAddRecordedAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [addSystolic, setAddSystolic] = useState("");
+  const [addDiastolic, setAddDiastolic] = useState("");
+  const [addNotes, setAddNotes] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
@@ -44,7 +42,7 @@ export default function PatientDetailPage() {
       const history = await patientsApi.getHistory(id);
       setPatient({ ...p, history });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
+      setError(err instanceof Error ? err.message : "Failed to load");
     } finally {
       setLoading(false);
     }
@@ -61,7 +59,7 @@ export default function PatientDetailPage() {
     try {
       const iso = parseLocalDateTime(addRecordedAt);
       if (!iso) {
-        setAddError('Enter a valid date and time.');
+        setAddError("Enter a valid date and time.");
         setAdding(false);
         return;
       }
@@ -72,12 +70,12 @@ export default function PatientDetailPage() {
         notes: addNotes.trim() || undefined,
       });
       setShowAddForm(false);
-      setAddSystolic('');
-      setAddDiastolic('');
-      setAddNotes('');
+      setAddSystolic("");
+      setAddDiastolic("");
+      setAddNotes("");
       await load();
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : 'Failed to add reading');
+      setAddError(err instanceof Error ? err.message : "Failed to add reading");
     } finally {
       setAdding(false);
     }
@@ -89,7 +87,7 @@ export default function PatientDetailPage() {
   if (error || !patient) {
     return (
       <div>
-        <Alert variant="destructive">{error ?? 'Patient not found'}</Alert>
+        <Alert variant="destructive">{error ?? "Patient not found"}</Alert>
         <Link href="/" className="mt-2 inline-block text-sm text-emerald-600 hover:underline">
           Back to lookup
         </Link>
@@ -101,9 +99,7 @@ export default function PatientDetailPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {patient.name || 'Patient'}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">{patient.name || "Patient"}</h1>
           <p className="text-gray-600">{patient.phone}</p>
         </div>
         <Link href="/">
@@ -127,7 +123,7 @@ export default function PatientDetailPage() {
             <p className="mt-1 text-sm text-gray-900">
               {patient.history[0]
                 ? new Date(patient.history[0].recordedAt).toLocaleString()
-                : 'No history'}
+                : "No history"}
             </p>
           </div>
           <div>
@@ -135,8 +131,8 @@ export default function PatientDetailPage() {
             <p className="mt-1 text-sm text-gray-900">
               {patient.history[0]?.bloodPressureSystolic != null ||
               patient.history[0]?.bloodPressureDiastolic != null
-                ? `${patient.history[0]?.bloodPressureSystolic ?? '–'} / ${patient.history[0]?.bloodPressureDiastolic ?? '–'}`
-                : '–'}
+                ? `${patient.history[0]?.bloodPressureSystolic ?? "–"} / ${patient.history[0]?.bloodPressureDiastolic ?? "–"}`
+                : "–"}
             </p>
           </div>
         </CardContent>
@@ -153,14 +149,14 @@ export default function PatientDetailPage() {
               setAddRecordedAt(new Date().toISOString().slice(0, 16));
             }}
           >
-            {showAddForm ? 'Cancel' : 'Add reading'}
+            {showAddForm ? "Cancel" : "Add reading"}
           </Button>
         </CardHeader>
         <CardContent>
           {showAddForm && (
             <form
               onSubmit={handleAddReading}
-              className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4"
+                className="mb-6 rounded-lg bg-surface_container_low p-4"
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -186,7 +182,7 @@ export default function PatientDetailPage() {
                       value={addSystolic}
                       onChange={(e) => setAddSystolic(e.target.value)}
                     />
-                    <span className="self-center text-gray-400">/</span>
+                    <span className="self-center text-on_surface_variant/60">/</span>
                     <Input
                       type="number"
                       min={0}
@@ -198,9 +194,7 @@ export default function PatientDetailPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Notes
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
                 <Textarea
                   placeholder="Optional notes"
                   value={addNotes}
@@ -213,7 +207,7 @@ export default function PatientDetailPage() {
                 </Alert>
               )}
               <Button type="submit" disabled={adding} className="mt-4">
-                {adding ? 'Adding…' : 'Add reading'}
+                {adding ? "Adding…" : "Add reading"}
               </Button>
             </form>
           )}
@@ -221,31 +215,31 @@ export default function PatientDetailPage() {
           {patient.history.length === 0 && !showAddForm ? (
             <p className="text-gray-500">No history yet.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-                  <tr className="text-left text-gray-600">
-                    <th className="px-3 py-2 font-medium">Date</th>
-                    <th className="px-3 py-2 font-medium">Blood pressure</th>
-                    <th className="px-3 py-2 font-medium">Notes</th>
+            <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+              <table className="w-full text-sm text-on_surface_variant">
+                <thead className="sticky top-0 z-10 bg-surface_container_lowest">
+                  <tr className="text-left">
+                    <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                      Date
+                    </th>
+                    <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                      Blood pressure
+                    </th>
+                    <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                      Notes
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {patient.history.map((row: PatientHistoryDto) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-gray-100 transition-colors hover:bg-gray-50"
-                    >
-                      <td className="px-3 py-3">
-                        {new Date(row.recordedAt).toLocaleString()}
+                    <tr key={row.id} className="transition-colors hover:bg-surface_container_high">
+                      <td className="px-4 py-4">{new Date(row.recordedAt).toLocaleString()}</td>
+                      <td className="px-4 py-4">
+                        {row.bloodPressureSystolic != null || row.bloodPressureDiastolic != null
+                          ? `${row.bloodPressureSystolic ?? "–"} / ${row.bloodPressureDiastolic ?? "–"}`
+                          : "–"}
                       </td>
-                      <td className="px-3 py-3">
-                        {row.bloodPressureSystolic != null ||
-                        row.bloodPressureDiastolic != null
-                          ? `${row.bloodPressureSystolic ?? '–'} / ${row.bloodPressureDiastolic ?? '–'}`
-                          : '–'}
-                      </td>
-                      <td className="px-3 py-3 text-gray-600">{row.notes || '–'}</td>
+                      <td className="px-4 py-4 text-on_surface_variant">{row.notes || "–"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,13 +1,13 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreatePatientDto {
-  @ApiProperty({ description: 'Patient phone number (unique)' })
+  @ApiProperty({ description: "Patient phone number (unique)" })
   @IsNotEmpty()
   @IsString()
   phone: string;
 
-  @ApiPropertyOptional({ description: 'Patient name' })
+  @ApiPropertyOptional({ description: "Patient name" })
   @IsOptional()
   @IsString()
   name?: string;

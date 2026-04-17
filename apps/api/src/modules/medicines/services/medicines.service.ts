@@ -1,19 +1,15 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { Medicine } from '../../../entities/medicine.entity';
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import type { Repository } from "typeorm";
 import {
   MedicineTransaction,
   MedicineTransactionType,
-} from '../../../entities/medicine-transaction.entity';
-import { Patient } from '../../../entities/patient.entity';
-import type { BuyMedicineDto } from '../dto/medicine-transaction.dto';
-import type { SellMedicineDto } from '../dto/medicine-transaction.dto';
-import type { CreateMedicineDto, UpdateMedicineDto } from '../dto/medicine.dto';
+} from "../../../entities/medicine-transaction.entity";
+import { Medicine } from "../../../entities/medicine.entity";
+import { Patient } from "../../../entities/patient.entity";
+import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
+import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
+import type { CreateMedicineDto, UpdateMedicineDto } from "../dto/medicine.dto";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -27,7 +23,6 @@ export class MedicinesService {
     private readonly txRepo: Repository<MedicineTransaction>,
     @InjectRepository(Patient)
     private readonly patientRepo: Repository<Patient>,
-    private readonly dataSource: DataSource,
   ) {}
 
   async list(options: {
@@ -36,21 +31,18 @@ export class MedicinesService {
     offset?: number;
     includeInactive?: boolean;
   }): Promise<{ items: Medicine[]; total: number }> {
-    const limit = Math.min(
-      Math.max(1, options.limit ?? DEFAULT_LIMIT),
-      MAX_LIMIT,
-    );
+    const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
     const offset = Math.max(0, options.offset ?? 0);
-    const qb = this.medicineRepo.createQueryBuilder('m');
+    const qb = this.medicineRepo.createQueryBuilder("m");
     if (!options.includeInactive) {
-      qb.andWhere('m.isActive = :active', { active: true });
+      qb.andWhere("m.isActive = :active", { active: true });
     }
     if (options.search?.trim()) {
-      qb.andWhere('m.name ILIKE :search', {
+      qb.andWhere("m.name ILIKE :search", {
         search: `%${options.search.trim()}%`,
       });
     }
-    qb.orderBy('m.name', 'ASC').skip(offset).take(limit);
+    qb.orderBy("m.name", "ASC").skip(offset).take(limit);
     const [items, total] = await qb.getManyAndCount();
     return { items, total };
   }
@@ -67,7 +59,7 @@ export class MedicinesService {
     const name = dto.name.trim();
     const exists = await this.medicineRepo.exists({ where: { name } });
     if (exists) {
-      throw new ConflictException('A medicine with this name already exists');
+      throw new ConflictException("A medicine with this name already exists");
     }
     const medicine = this.medicineRepo.create({
       name,
@@ -85,7 +77,7 @@ export class MedicinesService {
       const name = dto.name.trim();
       const other = await this.medicineRepo.findOne({ where: { name } });
       if (other && other.id !== id) {
-        throw new ConflictException('A medicine with this name already exists');
+        throw new ConflictException("A medicine with this name already exists");
       }
       medicine.name = name;
     }
@@ -102,12 +94,12 @@ export class MedicinesService {
   }
 
   async buy(medicineId: string, dto: BuyMedicineDto): Promise<MedicineTransaction> {
-    return this.dataSource.transaction(async (manager) => {
+    return this.medicineRepo.manager.transaction(async (manager) => {
       const medRepo = manager.getRepository(Medicine);
       const transactionRepo = manager.getRepository(MedicineTransaction);
       const medicine = await medRepo.findOne({
         where: { id: medicineId },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: "pessimistic_write" },
       });
       if (!medicine) {
         throw new NotFoundException(`Medicine ${medicineId} not found`);
@@ -127,17 +119,14 @@ export class MedicinesService {
     });
   }
 
-  async sell(
-    medicineId: string,
-    dto: SellMedicineDto,
-  ): Promise<MedicineTransaction> {
-    return this.dataSource.transaction(async (manager) => {
+  async sell(medicineId: string, dto: SellMedicineDto): Promise<MedicineTransaction> {
+    return this.medicineRepo.manager.transaction(async (manager) => {
       const medRepo = manager.getRepository(Medicine);
       const transactionRepo = manager.getRepository(MedicineTransaction);
       const patRepo = manager.getRepository(Patient);
       const medicine = await medRepo.findOne({
         where: { id: medicineId },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: "pessimistic_write" },
       });
       if (!medicine) {
         throw new NotFoundException(`Medicine ${medicineId} not found`);
@@ -151,7 +140,7 @@ export class MedicinesService {
         patientId = dto.patientId;
       }
       if (medicine.stockQuantity < dto.quantity) {
-        throw new ConflictException('Not enough stock');
+        throw new ConflictException("Not enough stock");
       }
       medicine.stockQuantity -= dto.quantity;
       await medRepo.save(medicine);
@@ -173,15 +162,12 @@ export class MedicinesService {
     options: { limit?: number; offset?: number },
   ): Promise<{ items: MedicineTransaction[]; total: number }> {
     await this.findOne(medicineId);
-    const limit = Math.min(
-      Math.max(1, options.limit ?? DEFAULT_LIMIT),
-      MAX_LIMIT,
-    );
+    const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
     const offset = Math.max(0, options.offset ?? 0);
     const [items, total] = await this.txRepo.findAndCount({
       where: { medicineId },
       relations: { patient: true },
-      order: { recordedAt: 'DESC' },
+      order: { recordedAt: "DESC" },
       take: limit,
       skip: offset,
     });

@@ -5,35 +5,38 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { MedicineTransaction } from './medicine-transaction.entity';
+} from "typeorm";
+import { MedicineTransaction } from "./medicine-transaction.entity";
 
-@Entity({ name: 'medicines' })
+@Entity({ name: "medicines" })
 export class Medicine {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: "varchar", nullable: true })
   sku: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: "varchar", nullable: true })
   unit: string | null;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: "int", default: 0 })
   stockQuantity: number;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: "boolean", default: true })
   isActive: boolean;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
-  @OneToMany(() => MedicineTransaction, (t) => t.medicine)
+  @OneToMany(
+    () => MedicineTransaction,
+    (t) => t.medicine,
+  )
   transactions: MedicineTransaction[];
 }

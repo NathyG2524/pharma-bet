@@ -1,9 +1,18 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.5.0/schema.json",
-  "organizeImports": { "enabled": true },
+  "organizeImports": {
+    "enabled": true
+  },
+  "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
+  },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": {
+      "recommended": true
+    }
   },
   "formatter": {
     "enabled": true,
@@ -12,14 +21,6 @@
     "lineWidth": 100
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      ".next",
-      ".turbo",
-      "coverage",
-      "*.config.js",
-      "*.config.cjs"
-    ]
+    "ignore": ["node_modules", "dist", ".next", ".turbo", "coverage", "*.config.js", "*.config.cjs"]
   }
 }

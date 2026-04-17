@@ -5,33 +5,37 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-} from 'typeorm';
-import { Patient } from './patient.entity';
+} from "typeorm";
+import { Patient } from "./patient.entity";
 
-@Entity({ name: 'patient_history' })
+@Entity({ name: "patient_history" })
 export class PatientHistory {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: "uuid" })
   patientId: string;
 
-  @ManyToOne(() => Patient, (p) => p.history, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'patientId' })
+  @ManyToOne(
+    () => Patient,
+    (p) => p.history,
+    { onDelete: "CASCADE" },
+  )
+  @JoinColumn({ name: "patientId" })
   patient: Patient;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: "timestamptz" })
   recordedAt: Date;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: "int", nullable: true })
   bloodPressureSystolic: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: "int", nullable: true })
   bloodPressureDiastolic: number | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   notes: string | null;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 }

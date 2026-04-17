@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Type } from "class-transformer";
 import {
   IsDateString,
   IsInt,
@@ -9,7 +9,7 @@ import {
   IsUUID,
   MaxLength,
   Min,
-} from 'class-validator';
+} from "class-validator";
 
 export class BuyMedicineDto {
   @ApiProperty()
@@ -19,13 +19,13 @@ export class BuyMedicineDto {
   @Min(1)
   quantity: number;
 
-  @ApiPropertyOptional({ description: 'Price per unit at purchase' })
+  @ApiPropertyOptional({ description: "Price per unit at purchase" })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   unitPrice?: string;
 
-  @ApiProperty({ description: 'ISO date string' })
+  @ApiProperty({ description: "ISO date string" })
   @IsNotEmpty()
   @IsDateString()
   recordedAt: string;
@@ -45,18 +45,18 @@ export class SellMedicineDto {
   @Min(1)
   quantity: number;
 
-  @ApiPropertyOptional({ description: 'Patient id; omit for walk-in' })
+  @ApiPropertyOptional({ description: "Patient id; omit for walk-in" })
   @IsOptional()
   @IsUUID()
   patientId?: string;
 
-  @ApiPropertyOptional({ description: 'Price per unit at sale' })
+  @ApiPropertyOptional({ description: "Price per unit at sale" })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   unitPrice?: string;
 
-  @ApiProperty({ description: 'ISO date string' })
+  @ApiProperty({ description: "ISO date string" })
   @IsNotEmpty()
   @IsDateString()
   recordedAt: string;

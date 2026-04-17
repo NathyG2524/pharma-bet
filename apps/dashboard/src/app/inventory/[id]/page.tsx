@@ -1,19 +1,11 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@drug-store/ui';
-import { medicinesApi } from '@/lib/api';
-import type { MedicineDto, MedicineTransactionDto } from '@drug-store/shared';
+import { medicinesApi } from "@/lib/api";
+import type { MedicineDto, MedicineTransactionDto } from "@drug-store/shared";
+import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@drug-store/ui";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 function formatDt(iso: string) {
   try {
@@ -25,12 +17,10 @@ function formatDt(iso: string) {
 
 export default function MedicineDetailPage() {
   const params = useParams();
-  const id = typeof params.id === 'string' ? params.id : '';
+  const id = typeof params.id === "string" ? params.id : "";
 
   const [medicine, setMedicine] = useState<MedicineDto | null>(null);
-  const [transactions, setTransactions] = useState<MedicineTransactionDto[]>(
-    [],
-  );
+  const [transactions, setTransactions] = useState<MedicineTransactionDto[]>([]);
   const [totalTx, setTotalTx] = useState(0);
   const pageSize = 30;
   const [loading, setLoading] = useState(true);
@@ -45,7 +35,7 @@ export default function MedicineDetailPage() {
       const m = await medicinesApi.getMedicine(id);
       setMedicine(m);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Not found');
+      setError(e instanceof Error ? e.message : "Not found");
       setMedicine(null);
     } finally {
       setLoading(false);
@@ -120,10 +110,8 @@ export default function MedicineDetailPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{medicine.name}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            SKU: {medicine.sku ?? '—'} · Unit: {medicine.unit ?? '—'} · Stock:{' '}
-            <span className="font-semibold text-gray-900">
-              {medicine.stockQuantity}
-            </span>
+            SKU: {medicine.sku ?? "—"} · Unit: {medicine.unit ?? "—"} · Stock:{" "}
+            <span className="font-semibold text-gray-900">{medicine.stockQuantity}</span>
             {!medicine.isActive && (
               <Badge className="ml-2" variant="warning">
                 Inactive
@@ -149,11 +137,11 @@ export default function MedicineDetailPage() {
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">SKU</p>
-            <p className="mt-1 font-medium text-gray-900">{medicine.sku ?? '—'}</p>
+            <p className="mt-1 font-medium text-gray-900">{medicine.sku ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Unit</p>
-            <p className="mt-1 font-medium text-gray-900">{medicine.unit ?? '—'}</p>
+            <p className="mt-1 font-medium text-gray-900">{medicine.unit ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Stock</p>
@@ -173,64 +161,59 @@ export default function MedicineDetailPage() {
             <p className="text-sm text-gray-500">No transactions yet.</p>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
+              <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+                <table className="w-full text-left text-sm text-on_surface_variant">
+                  <thead className="sticky top-0 z-10 bg-surface_container_lowest">
                     <tr>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         Type
                       </th>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         Qty
                       </th>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         Unit price
                       </th>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         When
                       </th>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         Patient
                       </th>
-                      <th className="px-3 py-2 font-medium text-gray-700">
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                         Notes
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((t) => (
-                      <tr
-                        key={t.id}
-                        className="border-b border-gray-100 transition-colors hover:bg-gray-50"
-                      >
-                        <td className="px-3 py-2">
+                      <tr key={t.id} className="transition-colors hover:bg-surface_container_high">
+                        <td className="px-4 py-4">
                           <span>
-                            {t.type === 'BUY' ? (
+                            {t.type === "BUY" ? (
                               <Badge variant="success">{t.type}</Badge>
                             ) : (
                               <Badge variant="default">{t.type}</Badge>
                             )}
                           </span>
                         </td>
-                        <td className="px-3 py-2">{t.quantity}</td>
-                        <td className="px-3 py-2">
-                          {t.unitPrice ?? '—'}
-                        </td>
-                        <td className="px-3 py-2 text-gray-600">
+                        <td className="px-4 py-4 text-on_surface">{t.quantity}</td>
+                        <td className="px-4 py-4">{t.unitPrice ?? "—"}</td>
+                        <td className="px-4 py-4 text-on_surface_variant">
                           {formatDt(t.recordedAt)}
                         </td>
-                        <td className="px-3 py-2 text-gray-600">
-                          {t.type === 'SELL' && t.patient
+                        <td className="px-4 py-4 text-on_surface_variant">
+                          {t.type === "SELL" && t.patient
                             ? `${t.patient.name ?? t.patient.phone} (${t.patient.phone})`
-                            : t.type === 'SELL'
-                              ? 'Walk-in'
-                              : '—'}
+                            : t.type === "SELL"
+                              ? "Walk-in"
+                              : "—"}
                         </td>
                         <td
-                          className="max-w-[180px] truncate px-3 py-2 text-gray-600"
+                          className="max-w-[180px] truncate px-4 py-4 text-on_surface_variant"
                           title={t.notes ?? undefined}
                         >
-                          {t.notes ?? '—'}
+                          {t.notes ?? "—"}
                         </td>
                       </tr>
                     ))}
@@ -245,7 +228,7 @@ export default function MedicineDetailPage() {
                     disabled={txLoading}
                     onClick={() => void loadMore()}
                   >
-                    {txLoading ? 'Loading…' : 'Load more'}
+                    {txLoading ? "Loading…" : "Load more"}
                   </Button>
                 </div>
               )}

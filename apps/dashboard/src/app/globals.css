@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-on_surface font-inter antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-surface_container_highest/80 backdrop-blur-[20px];
+  }
+}

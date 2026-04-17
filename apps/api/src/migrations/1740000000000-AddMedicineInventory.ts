@@ -1,7 +1,7 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AddMedicineInventory1740000000000 implements MigrationInterface {
-  name = 'AddMedicineInventory1740000000000';
+  name = "AddMedicineInventory1740000000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -49,9 +49,7 @@ export class AddMedicineInventory1740000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `DROP INDEX "IDX_medicine_transactions_medicine_recorded"`,
-    );
+    await queryRunner.query(`DROP INDEX "IDX_medicine_transactions_medicine_recorded"`);
     await queryRunner.query(`DROP INDEX "IDX_medicine_transactions_patientId"`);
     await queryRunner.query(`DROP INDEX "IDX_medicine_transactions_medicineId"`);
     await queryRunner.query(`DROP TABLE "medicine_transactions"`);

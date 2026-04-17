@@ -1,22 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from '@drug-store/ui';
-import { patientsApi } from '@/lib/api';
-import { isValidPhone, normalizePhone } from '@/lib/validation';
+import { patientsApi } from "@/lib/api";
+import { isValidPhone, normalizePhone } from "@/lib/validation";
+import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@drug-store/ui";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function HomePage() {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -29,7 +21,7 @@ export default function HomePage() {
     setPhoneError(null);
     const normalizedPhone = normalizePhone(phone);
     if (!isValidPhone(normalizedPhone)) {
-      setPhoneError('Enter a valid phone number.');
+      setPhoneError("Enter a valid phone number.");
       return;
     }
     setLoading(true);
@@ -37,7 +29,7 @@ export default function HomePage() {
       const data = await patientsApi.getPatientByPhone(normalizedPhone);
       router.push(`/patients/${data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Patient not found');
+      setError(err instanceof Error ? err.message : "Patient not found");
     } finally {
       setLoading(false);
     }
@@ -45,9 +37,7 @@ export default function HomePage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">
-        Patient lookup
-      </h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Patient lookup</h1>
       <Card>
         <CardHeader>
           <CardTitle>Enter phone number</CardTitle>
@@ -55,10 +45,7 @@ export default function HomePage() {
         <CardContent>
           <form onSubmit={handleLookup} className="space-y-4">
             <div>
-              <label
-                htmlFor="phone"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Phone
               </label>
               <Input
@@ -69,14 +56,12 @@ export default function HomePage() {
                 onChange={(e) => setPhone(e.target.value)}
                 onBlur={() =>
                   setPhoneError(
-                    phone && !isValidPhone(phone) ? 'Enter a valid phone number.' : null,
+                    phone && !isValidPhone(phone) ? "Enter a valid phone number." : null,
                   )
                 }
                 disabled={loading}
               />
-              {phoneError && (
-                <p className="mt-1 text-xs text-red-600">{phoneError}</p>
-              )}
+              {phoneError && <p className="mt-1 text-xs text-red-600">{phoneError}</p>}
             </div>
             {error && (
               <Alert variant="destructive">
@@ -93,7 +78,7 @@ export default function HomePage() {
             )}
             <div className="flex gap-2">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Looking up…' : 'Look up'}
+                {loading ? "Looking up…" : "Look up"}
               </Button>
             </div>
           </form>

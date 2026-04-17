@@ -1,30 +1,22 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from '@drug-store/ui';
-import { patientsApi } from '@/lib/api';
-import { isValidPhone, normalizePhone } from '@/lib/validation';
+import { patientsApi } from "@/lib/api";
+import { isValidPhone, normalizePhone } from "@/lib/validation";
+import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@drug-store/ui";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function NewPatientForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
   useEffect(() => {
-    const q = searchParams.get('phone');
+    const q = searchParams.get("phone");
     if (q) setPhone(q);
   }, [searchParams]);
 
@@ -34,7 +26,7 @@ function NewPatientForm() {
     setPhoneError(null);
     const normalizedPhone = normalizePhone(phone);
     if (!isValidPhone(normalizedPhone)) {
-      setPhoneError('Enter a valid phone number.');
+      setPhoneError("Enter a valid phone number.");
       return;
     }
     setLoading(true);
@@ -45,7 +37,7 @@ function NewPatientForm() {
       });
       router.push(`/patients/${patient.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create patient');
+      setError(err instanceof Error ? err.message : "Failed to create patient");
     } finally {
       setLoading(false);
     }
@@ -61,10 +53,7 @@ function NewPatientForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="phone"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Phone *
               </label>
               <Input
@@ -75,21 +64,16 @@ function NewPatientForm() {
                 onChange={(e) => setPhone(e.target.value)}
                 onBlur={() =>
                   setPhoneError(
-                    phone && !isValidPhone(phone) ? 'Enter a valid phone number.' : null,
+                    phone && !isValidPhone(phone) ? "Enter a valid phone number." : null,
                   )
                 }
                 required
                 disabled={loading}
               />
-              {phoneError && (
-                <p className="mt-1 text-xs text-red-600">{phoneError}</p>
-              )}
+              {phoneError && <p className="mt-1 text-xs text-red-600">{phoneError}</p>}
             </div>
             <div>
-              <label
-                htmlFor="name"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Name (optional)
               </label>
               <Input
@@ -101,13 +85,9 @@ function NewPatientForm() {
                 disabled={loading}
               />
             </div>
-            {error && (
-              <Alert variant="destructive">
-                {error}
-              </Alert>
-            )}
+            {error && <Alert variant="destructive">{error}</Alert>}
             <Button type="submit" disabled={loading}>
-              {loading ? 'Creating…' : 'Create patient'}
+              {loading ? "Creating…" : "Create patient"}
             </Button>
           </form>
         </CardContent>

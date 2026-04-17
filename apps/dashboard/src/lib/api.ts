@@ -1,12 +1,10 @@
-import { patientsApi, medicinesApi } from '@drug-store/shared';
+import { medicinesApi, patientsApi } from "@drug-store/shared";
 
 const apiUrl =
-  typeof process !== 'undefined'
+  typeof process !== "undefined"
     ? (process.env.NEXT_PUBLIC_API_URL ??
-      (process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3051'
-        : ''))
-    : '';
+      (process.env.NODE_ENV === "development" ? "http://localhost:3051" : ""))
+    : "";
 
 if (apiUrl) {
   patientsApi.configure({ apiBaseUrl: apiUrl });

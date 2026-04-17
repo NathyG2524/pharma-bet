@@ -1,22 +1,16 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { PatientsService } from '../services/patients.service';
-import { CreatePatientDto } from '../dto/patient.dto';
-import { CreatePatientHistoryDto } from '../dto/patient-history.dto';
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import type { CreatePatientHistoryDto } from "../dto/patient-history.dto";
+import type { CreatePatientDto } from "../dto/patient.dto";
+import { PatientsService } from "../services/patients.service";
 
-@Controller('patients')
-@ApiTags('Patients')
+@Controller("patients")
+@ApiTags("Patients")
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-  @Get('by-phone/:phone')
-  async findByPhone(@Param('phone') phone: string) {
+  @Get("by-phone/:phone")
+  async findByPhone(@Param("phone") phone: string) {
     return this.patientsService.findByPhone(phone);
   }
 
@@ -25,21 +19,18 @@ export class PatientsController {
     return this.patientsService.create(dto);
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Get(":id")
+  async findOne(@Param("id") id: string) {
     return this.patientsService.findOne(id);
   }
 
-  @Get(':id/history')
-  async getHistory(@Param('id') id: string) {
+  @Get(":id/history")
+  async getHistory(@Param("id") id: string) {
     return this.patientsService.getHistory(id);
   }
 
-  @Post(':id/history')
-  async addHistory(
-    @Param('id') id: string,
-    @Body() dto: CreatePatientHistoryDto,
-  ) {
+  @Post(":id/history")
+  async addHistory(@Param("id") id: string, @Body() dto: CreatePatientHistoryDto) {
     return this.patientsService.addHistory(id, dto);
   }
 }

@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { medicinesApi, patientsApi } from "@/lib/api";
+import { isValidPhone, normalizePhone, parseLocalDateTime } from "@/lib/validation";
+import type { MedicineDto } from "@drug-store/shared";
 import {
   Alert,
   Button,
@@ -12,26 +13,23 @@ import {
   Input,
   Select,
   Textarea,
-} from '@drug-store/ui';
-import { medicinesApi, patientsApi } from '@/lib/api';
-import type { MedicineDto } from '@drug-store/shared';
-import { isValidPhone, normalizePhone, parseLocalDateTime } from '@/lib/validation';
+} from "@drug-store/ui";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 function toLocalDatetimeValue(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function SellPage() {
   const [medicines, setMedicines] = useState<MedicineDto[]>([]);
-  const [medicineId, setMedicineId] = useState('');
+  const [medicineId, setMedicineId] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [unitPrice, setUnitPrice] = useState('');
-  const [recordedAt, setRecordedAt] = useState(() =>
-    toLocalDatetimeValue(new Date()),
-  );
-  const [notes, setNotes] = useState('');
-  const [phone, setPhone] = useState('');
+  const [unitPrice, setUnitPrice] = useState("");
+  const [recordedAt, setRecordedAt] = useState(() => toLocalDatetimeValue(new Date()));
+  const [notes, setNotes] = useState("");
+  const [phone, setPhone] = useState("");
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientLabel, setPatientLabel] = useState<string | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -48,7 +46,7 @@ export default function SellPage() {
       setMedicines(res.items);
       setMedicineId((prev) => {
         if (prev && res.items.some((m) => m.id === prev)) return prev;
-        return res.items[0]?.id ?? '';
+        return res.items[0]?.id ?? "";
       });
     } catch {
       setMedicines([]);
@@ -79,7 +77,7 @@ export default function SellPage() {
     if (!isValidPhone(normalizedPhone)) {
       setPatientId(null);
       setPatientLabel(null);
-      setLookupError('Enter a valid phone number for lookup.');
+      setLookupError("Enter a valid phone number for lookup.");
       return;
     }
     setLookupLoading(true);
@@ -90,7 +88,7 @@ export default function SellPage() {
     } catch {
       setPatientId(null);
       setPatientLabel(null);
-      setLookupError('Patient not found. Register first or sell as walk-in.');
+      setLookupError("Patient not found. Register first or sell as walk-in.");
     } finally {
       setLookupLoading(false);
     }
@@ -99,7 +97,7 @@ export default function SellPage() {
   const clearPatient = () => {
     setPatientId(null);
     setPatientLabel(null);
-    setPhone('');
+    setPhone("");
     setLookupError(null);
   };
 
@@ -112,7 +110,7 @@ export default function SellPage() {
     try {
       const iso = parseLocalDateTime(recordedAt);
       if (!iso) {
-        setError('Enter a valid date and time.');
+        setError("Enter a valid date and time.");
         setLoading(false);
         return;
       }
@@ -123,12 +121,12 @@ export default function SellPage() {
         notes: notes.trim() || undefined,
         ...(patientId ? { patientId } : {}),
       });
-      setSuccess('Sale recorded.');
-      setNotes('');
-      setUnitPrice('');
+      setSuccess("Sale recorded.");
+      setNotes("");
+      setUnitPrice("");
       await loadMedicines();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed');
+      setError(err instanceof Error ? err.message : "Failed");
     } finally {
       setLoading(false);
     }
@@ -144,17 +142,14 @@ export default function SellPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="medicine"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="medicine" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Medicine
               </label>
               {listLoading ? (
                 <p className="text-sm text-gray-500">Loading list…</p>
               ) : medicines.length === 0 ? (
                 <p className="text-sm text-gray-600">
-                  No medicines.{' '}
+                  No medicines.{" "}
                   <Link href="/inventory/new" className="underline">
                     Add one first
                   </Link>
@@ -174,18 +169,13 @@ export default function SellPage() {
                     ))}
                   </Select>
                   {selected && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      In stock: {selected.stockQuantity}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-500">In stock: {selected.stockQuantity}</p>
                   )}
                 </>
               )}
             </div>
             <div>
-              <label
-                htmlFor="qty"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="qty" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Quantity
               </label>
               <Input
@@ -194,15 +184,11 @@ export default function SellPage() {
                 min={1}
                 max={selected?.stockQuantity}
                 value={quantity}
-                onChange={(e) =>
-                  setQuantity(Math.max(1, Number(e.target.value) || 1))
-                }
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
                 disabled={loading}
               />
               {remainingStock != null && !exceedsStock && (
-                <p className="mt-1 text-sm text-gray-500">
-                  Stock after sale: {remainingStock}
-                </p>
+                <p className="mt-1 text-sm text-gray-500">Stock after sale: {remainingStock}</p>
               )}
             </div>
             {exceedsStock && (
@@ -210,19 +196,14 @@ export default function SellPage() {
                 Quantity exceeds available stock for this medicine.
               </Alert>
             )}
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <p className="mb-2 text-sm font-medium text-gray-700">
+            <div className="rounded-lg bg-surface_container_low p-4">
+              <p className="mb-2 text-sm font-medium text-on_surface_variant">
                 Patient (optional — walk-in if empty)
               </p>
               {patientLabel ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm text-gray-900">{patientLabel}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={clearPatient}
-                  >
+                  <span className="text-sm text-on_surface">{patientLabel}</span>
+                  <Button type="button" variant="outline" size="sm" onClick={clearPatient}>
                     Clear
                   </Button>
                 </div>
@@ -242,20 +223,15 @@ export default function SellPage() {
                       disabled={lookupLoading || loading}
                       onClick={() => void handleLookupPatient()}
                     >
-                      {lookupLoading ? '…' : 'Look up'}
+                      {lookupLoading ? "…" : "Look up"}
                     </Button>
                   </div>
-                  {lookupError && (
-                    <p className="mt-2 text-sm text-amber-800">{lookupError}</p>
-                  )}
+                  {lookupError && <p className="mt-2 text-sm text-tertiary">{lookupError}</p>}
                 </>
               )}
             </div>
             <div>
-              <label
-                htmlFor="when"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="when" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Date & time
               </label>
               <Input
@@ -267,10 +243,7 @@ export default function SellPage() {
               />
             </div>
             <div>
-              <label
-                htmlFor="price"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Unit price (optional)
               </label>
               <Input
@@ -283,10 +256,7 @@ export default function SellPage() {
               />
             </div>
             <div>
-              <label
-                htmlFor="notes"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Notes (optional)
               </label>
               <Textarea
@@ -296,11 +266,7 @@ export default function SellPage() {
                 disabled={loading}
               />
             </div>
-            {error && (
-              <Alert variant="destructive">
-                {error}
-              </Alert>
-            )}
+            {error && <Alert variant="destructive">{error}</Alert>}
             {success && (
               <Alert variant="success">
                 <div className="flex flex-wrap items-center gap-3">
@@ -317,11 +283,9 @@ export default function SellPage() {
             <div className="flex gap-2">
               <Button
                 type="submit"
-                disabled={
-                  loading || !medicines.length || !medicineId || exceedsStock
-                }
+                disabled={loading || !medicines.length || !medicineId || exceedsStock}
               >
-                {loading ? 'Saving…' : 'Record sale'}
+                {loading ? "Saving…" : "Record sale"}
               </Button>
               <Link href="/inventory">
                 <Button type="button" variant="outline">

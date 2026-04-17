@@ -18,7 +18,7 @@ export interface PatientSummaryDto {
 export interface MedicineTransactionDto {
   id: string;
   medicineId: string;
-  type: 'BUY' | 'SELL';
+  type: "BUY" | "SELL";
   quantity: number;
   unitPrice: string | null;
   recordedAt: string;

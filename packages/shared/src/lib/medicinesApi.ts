@@ -6,16 +6,16 @@ import type {
   MedicineTransactionsResponse,
   SellMedicineInput,
   UpdateMedicineInput,
-} from '../types/medicine';
+} from "../types/medicine";
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === '') continue;
+    if (v === undefined || v === "") continue;
     q.set(k, String(v));
   }
   const s = q.toString();
-  return s ? `?${s}` : '';
+  return s ? `?${s}` : "";
 }
 
 export class MedicinesApi {
@@ -25,18 +25,15 @@ export class MedicinesApi {
     this.apiBaseUrl = options.apiBaseUrl ?? null;
   }
 
-  private async request<T>(
-    path: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (!this.apiBaseUrl) {
-      throw new Error('Medicines API not configured (apiBaseUrl required)');
+      throw new Error("Medicines API not configured (apiBaseUrl required)");
     }
-    const url = `${this.apiBaseUrl.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+    const url = `${this.apiBaseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
     const res = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       },
     });
@@ -44,7 +41,7 @@ export class MedicinesApi {
       const text = await res.text();
       throw new Error(`API error: ${res.status} ${text}`);
     }
-    if (res.status === 204 || res.headers.get('content-length') === '0') {
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
       return undefined as T;
     }
     return res.json();
@@ -70,38 +67,29 @@ export class MedicinesApi {
   }
 
   async createMedicine(dto: CreateMedicineInput): Promise<MedicineDto> {
-    return this.request<MedicineDto>('/api/medicines', {
-      method: 'POST',
+    return this.request<MedicineDto>("/api/medicines", {
+      method: "POST",
       body: JSON.stringify(dto),
     });
   }
 
-  async updateMedicine(
-    id: string,
-    dto: UpdateMedicineInput,
-  ): Promise<MedicineDto> {
+  async updateMedicine(id: string, dto: UpdateMedicineInput): Promise<MedicineDto> {
     return this.request<MedicineDto>(`/api/medicines/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(dto),
     });
   }
 
-  async buyMedicine(
-    medicineId: string,
-    dto: BuyMedicineInput,
-  ): Promise<unknown> {
+  async buyMedicine(medicineId: string, dto: BuyMedicineInput): Promise<unknown> {
     return this.request(`/api/medicines/${medicineId}/buy`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(dto),
     });
   }
 
-  async sellMedicine(
-    medicineId: string,
-    dto: SellMedicineInput,
-  ): Promise<unknown> {
+  async sellMedicine(medicineId: string, dto: SellMedicineInput): Promise<unknown> {
     return this.request(`/api/medicines/${medicineId}/sell`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(dto),
     });
   }

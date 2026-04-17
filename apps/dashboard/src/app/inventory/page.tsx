@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { medicinesApi } from "@/lib/api";
+import type { MedicineDto } from "@drug-store/shared";
 import {
   Alert,
   Badge,
@@ -11,14 +11,14 @@ import {
   CardHeader,
   CardTitle,
   Input,
-} from '@drug-store/ui';
-import { medicinesApi } from '@/lib/api';
-import type { MedicineDto } from '@drug-store/shared';
+} from "@drug-store/ui";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 export default function InventoryPage() {
   const LOW_STOCK = 10;
-  const [search, setSearch] = useState('');
-  const [debounced, setDebounced] = useState('');
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [items, setItems] = useState<MedicineDto[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function InventoryPage() {
       setItems(res.items);
       setTotal(res.total);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load');
+      setError(e instanceof Error ? e.message : "Failed to load");
       setItems([]);
     } finally {
       setLoading(false);
@@ -74,7 +74,7 @@ export default function InventoryPage() {
             aria-label="Search medicines"
           />
           <p className="mt-2 text-sm text-gray-500">
-            {loading ? 'Loading…' : `${total} medicine(s)`}
+            {loading ? "Loading…" : `${total} medicine(s)`}
           </p>
         </CardContent>
       </Card>
@@ -83,53 +83,54 @@ export default function InventoryPage() {
           {error}
         </Alert>
       )}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
+      <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+        <table className="w-full text-left text-sm text-on_surface_variant">
+          <thead className="sticky top-0 z-10 bg-surface_container_lowest">
             <tr>
-              <th className="px-4 py-3 font-medium text-gray-700">Name</th>
-              <th className="px-4 py-3 font-medium text-gray-700">SKU</th>
-              <th className="px-4 py-3 font-medium text-gray-700">Unit</th>
-              <th className="px-4 py-3 font-medium text-gray-700">Stock</th>
-              <th className="px-4 py-3 font-medium text-gray-700" />
+              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                Name
+              </th>
+              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                SKU
+              </th>
+              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                Unit
+              </th>
+              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                Stock
+              </th>
+              <th className="px-4 py-4" />
             </tr>
           </thead>
           <tbody>
             {items.length === 0 && !loading ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-8 text-center text-gray-500"
-                >
-                  No medicines yet.{' '}
-                  <Link href="/inventory/new" className="font-medium underline">
+                <td colSpan={5} className="px-4 py-8 text-center text-on_surface_variant">
+                  No medicines yet.{" "}
+                  <Link
+                    href="/inventory/new"
+                    className="font-medium text-primary underline hover:text-primary_container"
+                  >
                     Add one
                   </Link>
                 </td>
               </tr>
             ) : (
               items.map((m) => (
-                <tr
-                  key={m.id}
-                  className="border-b border-gray-100 transition-colors even:bg-gray-50/50 hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {m.name}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{m.sku ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{m.unit ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-900">
+                <tr key={m.id} className="transition-colors hover:bg-surface_container_high">
+                  <td className="px-4 py-4 font-medium text-on_surface">{m.name}</td>
+                  <td className="px-4 py-4">{m.sku ?? "—"}</td>
+                  <td className="px-4 py-4">{m.unit ?? "—"}</td>
+                  <td className="px-4 py-4 text-on_surface">
                     <div className="flex items-center gap-2">
                       <span>{m.stockQuantity}</span>
-                      {m.stockQuantity <= LOW_STOCK && (
-                        <Badge variant="warning">Low stock</Badge>
-                      )}
+                      {m.stockQuantity <= LOW_STOCK && <Badge variant="warning">Low stock</Badge>}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-4">
                     <Link
                       href={`/inventory/${m.id}`}
-                      className="font-medium text-blue-600 hover:underline"
+                      className="font-medium text-primary hover:text-primary_container hover:underline"
                     >
                       View
                     </Link>

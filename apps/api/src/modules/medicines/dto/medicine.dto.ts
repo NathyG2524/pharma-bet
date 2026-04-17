@@ -1,20 +1,20 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class CreateMedicineDto {
-  @ApiProperty({ description: 'Display name (unique)' })
+  @ApiProperty({ description: "Display name (unique)" })
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
   name: string;
 
-  @ApiPropertyOptional({ description: 'SKU or internal code' })
+  @ApiPropertyOptional({ description: "SKU or internal code" })
   @IsOptional()
   @IsString()
   @MaxLength(100)
   sku?: string;
 
-  @ApiPropertyOptional({ description: 'Unit e.g. tablet, bottle' })
+  @ApiPropertyOptional({ description: "Unit e.g. tablet, bottle" })
   @IsOptional()
   @IsString()
   @MaxLength(50)
@@ -40,7 +40,7 @@ export class UpdateMedicineDto {
   @MaxLength(50)
   unit?: string | null;
 
-  @ApiPropertyOptional({ description: 'Hide from default list when false' })
+  @ApiPropertyOptional({ description: "Hide from default list when false" })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

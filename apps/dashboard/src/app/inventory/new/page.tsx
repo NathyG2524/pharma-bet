@@ -1,24 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-} from '@drug-store/ui';
-import { medicinesApi } from '@/lib/api';
+import { medicinesApi } from "@/lib/api";
+import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@drug-store/ui";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function NewMedicinePage() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [sku, setSku] = useState('');
-  const [unit, setUnit] = useState('');
+  const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
+  const [unit, setUnit] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -28,7 +20,7 @@ export default function NewMedicinePage() {
     setError(null);
     setNameError(null);
     if (!name.trim()) {
-      setNameError('Medicine name is required.');
+      setNameError("Medicine name is required.");
       return;
     }
     setLoading(true);
@@ -40,7 +32,7 @@ export default function NewMedicinePage() {
       });
       router.push(`/inventory/${m.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create');
+      setError(err instanceof Error ? err.message : "Failed to create");
     } finally {
       setLoading(false);
     }
@@ -56,31 +48,21 @@ export default function NewMedicinePage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="name"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Name <span className="text-red-600">*</span>
               </label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onBlur={() =>
-                  setNameError(name.trim() ? null : 'Medicine name is required.')
-                }
+                onBlur={() => setNameError(name.trim() ? null : "Medicine name is required.")}
                 disabled={loading}
                 required
               />
-              {nameError && (
-                <p className="mt-1 text-xs text-red-600">{nameError}</p>
-              )}
+              {nameError && <p className="mt-1 text-xs text-red-600">{nameError}</p>}
             </div>
             <div>
-              <label
-                htmlFor="sku"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="sku" className="mb-1.5 block text-sm font-medium text-gray-700">
                 SKU (optional)
               </label>
               <Input
@@ -91,10 +73,7 @@ export default function NewMedicinePage() {
               />
             </div>
             <div>
-              <label
-                htmlFor="unit"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="unit" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Unit (optional)
               </label>
               <Input
@@ -105,14 +84,10 @@ export default function NewMedicinePage() {
                 disabled={loading}
               />
             </div>
-            {error && (
-              <Alert variant="destructive">
-                {error}
-              </Alert>
-            )}
+            {error && <Alert variant="destructive">{error}</Alert>}
             <div className="flex gap-2">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Saving…' : 'Create'}
+                {loading ? "Saving…" : "Create"}
               </Button>
               <Link href="/inventory">
                 <Button type="button" variant="outline">
