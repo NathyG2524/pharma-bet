@@ -195,11 +195,20 @@ export default function OrganizationPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-            <Input
-              value={tenantName}
-              onChange={(e) => setTenantName(e.target.value)}
-              placeholder="New tenant name"
-            />
+            <div>
+              <label
+                htmlFor="tenant-name"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Tenant name
+              </label>
+              <Input
+                id="tenant-name"
+                value={tenantName}
+                onChange={(e) => setTenantName(e.target.value)}
+                placeholder="New tenant name"
+              />
+            </div>
             <Button type="button" onClick={handleTenantCreate} disabled={loading}>
               Create tenant
             </Button>
@@ -218,18 +227,36 @@ export default function OrganizationPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-[2fr_1fr_1fr]">
-            <Input
-              value={branchName}
-              onChange={(e) => setBranchName(e.target.value)}
-              placeholder="Branch name"
-              disabled={!state.tenantId}
-            />
-            <Input
-              value={branchCode}
-              onChange={(e) => setBranchCode(e.target.value)}
-              placeholder="Code (optional)"
-              disabled={!state.tenantId}
-            />
+            <div>
+              <label
+                htmlFor="branch-name"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Branch name
+              </label>
+              <Input
+                id="branch-name"
+                value={branchName}
+                onChange={(e) => setBranchName(e.target.value)}
+                placeholder="Branch name"
+                disabled={!state.tenantId}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="branch-code"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Branch code
+              </label>
+              <Input
+                id="branch-code"
+                value={branchCode}
+                onChange={(e) => setBranchCode(e.target.value)}
+                placeholder="Code (optional)"
+                disabled={!state.tenantId}
+              />
+            </div>
             <Button
               type="button"
               onClick={handleBranchCreate}
@@ -278,37 +305,64 @@ export default function OrganizationPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
-            <Input
-              value={assignmentUserId}
-              onChange={(e) => setAssignmentUserId(e.target.value)}
-              placeholder="User ID"
-              disabled={!state.tenantId}
-            />
-            <Select
-              value={assignmentRole}
-              onChange={(e) => setAssignmentRole(e.target.value as UserRole)}
-              disabled={!state.tenantId}
-            >
-              {roleOptions.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
+            <div>
+              <label
+                htmlFor="assignment-user-id"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                User ID
+              </label>
+              <Input
+                id="assignment-user-id"
+                value={assignmentUserId}
+                onChange={(e) => setAssignmentUserId(e.target.value)}
+                placeholder="User ID"
+                disabled={!state.tenantId}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="assignment-role"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Role
+              </label>
+              <Select
+                id="assignment-role"
+                value={assignmentRole}
+                onChange={(e) => setAssignmentRole(e.target.value as UserRole)}
+                disabled={!state.tenantId}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label
+                htmlFor="assignment-branch"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Branch
+              </label>
+              <Select
+                id="assignment-branch"
+                value={assignmentBranchId}
+                onChange={(e) => setAssignmentBranchId(e.target.value)}
+                disabled={!state.tenantId || !assignmentRole.startsWith("branch_")}
+              >
+                <option value="" disabled>
+                  Select branch
                 </option>
-              ))}
-            </Select>
-            <Select
-              value={assignmentBranchId}
-              onChange={(e) => setAssignmentBranchId(e.target.value)}
-              disabled={!state.tenantId || !assignmentRole.startsWith("branch_")}
-            >
-              <option value="" disabled>
-                Select branch
-              </option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </Select>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
           <Button
             type="button"
