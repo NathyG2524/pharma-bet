@@ -75,15 +75,22 @@ export function TenantBranchSwitcher() {
 
   useEffect(() => {
     const branchIds = branches.map((branch) => branch.id);
+    const patch: { branchIds?: string[]; activeBranchId?: string } = {};
     if (!arraysEqual(branchIds, state.branchIds)) {
-      updateState({ branchIds });
+      patch.branchIds = branchIds;
     }
-    if (branchIds.length > 0) {
-      if (!state.activeBranchId || !branchIds.includes(state.activeBranchId)) {
-        updateState({ activeBranchId: branchIds[0] });
-      }
-    } else if (state.activeBranchId) {
-      updateState({ activeBranchId: "" });
+    const currentActiveBranchId = state.activeBranchId ?? "";
+    let nextActiveBranchId = currentActiveBranchId;
+    if (branchIds.length === 0) {
+      nextActiveBranchId = "";
+    } else if (!currentActiveBranchId || !branchIds.includes(currentActiveBranchId)) {
+      nextActiveBranchId = branchIds[0];
+    }
+    if (nextActiveBranchId !== currentActiveBranchId) {
+      patch.activeBranchId = nextActiveBranchId;
+    }
+    if (Object.keys(patch).length > 0) {
+      updateState(patch);
     }
   }, [branches, state.branchIds, state.activeBranchId, updateState]);
 
