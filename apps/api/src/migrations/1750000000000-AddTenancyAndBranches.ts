@@ -61,8 +61,49 @@ export class AddTenancyAndBranches1750000000000 implements MigrationInterface {
       `CREATE INDEX "IDX_user_memberships_tenant" ON "user_memberships" ("tenantId")`,
     );
 
-    await queryRunner.query(`ALTER TABLE "patients" ADD "tenantId" uuid NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "patients" ADD "branchId" uuid NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "patients" ADD "tenantId" uuid`);
+    await queryRunner.query(`ALTER TABLE "patients" ADD "branchId" uuid`);
+    await queryRunner.query(`ALTER TABLE "patient_history" ADD "tenantId" uuid`);
+    await queryRunner.query(`ALTER TABLE "patient_history" ADD "branchId" uuid`);
+    await queryRunner.query(`ALTER TABLE "medicines" ADD "tenantId" uuid`);
+    await queryRunner.query(`ALTER TABLE "medicines" ADD "branchId" uuid`);
+    await queryRunner.query(`ALTER TABLE "medicine_transactions" ADD "tenantId" uuid`);
+    await queryRunner.query(`ALTER TABLE "medicine_transactions" ADD "branchId" uuid`);
+    await queryRunner.query(`
+      DO $$
+      DECLARE
+        tenant_id uuid;
+        branch_id uuid;
+      BEGIN
+        SELECT "id" INTO tenant_id FROM "tenants" WHERE "name" = 'Legacy tenant';
+        IF tenant_id IS NULL THEN
+          INSERT INTO "tenants" ("name") VALUES ('Legacy tenant') RETURNING "id" INTO tenant_id;
+        END IF;
+        SELECT "id" INTO branch_id FROM "branches" WHERE "tenantId" = tenant_id AND "name" = 'Legacy branch';
+        IF branch_id IS NULL THEN
+          INSERT INTO "branches" ("tenantId", "name", "code")
+          VALUES (tenant_id, 'Legacy branch', 'LEGACY')
+          RETURNING "id" INTO branch_id;
+        END IF;
+        UPDATE "patients" SET "tenantId" = tenant_id, "branchId" = branch_id WHERE "tenantId" IS NULL;
+        UPDATE "patient_history" SET "tenantId" = tenant_id, "branchId" = branch_id WHERE "tenantId" IS NULL;
+        UPDATE "medicines" SET "tenantId" = tenant_id, "branchId" = branch_id WHERE "tenantId" IS NULL;
+        UPDATE "medicine_transactions" SET "tenantId" = tenant_id, "branchId" = branch_id WHERE "tenantId" IS NULL;
+      END $$;
+    `);
+    await queryRunner.query(`ALTER TABLE "patients" ALTER COLUMN "tenantId" SET NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "patients" ALTER COLUMN "branchId" SET NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "patient_history" ALTER COLUMN "tenantId" SET NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "patient_history" ALTER COLUMN "branchId" SET NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "medicines" ALTER COLUMN "tenantId" SET NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "medicines" ALTER COLUMN "branchId" SET NOT NULL`);
+    await queryRunner.query(
+      `ALTER TABLE "medicine_transactions" ALTER COLUMN "tenantId" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "medicine_transactions" ALTER COLUMN "branchId" SET NOT NULL`,
+    );
+
     await queryRunner.query(`ALTER TABLE "patients" DROP CONSTRAINT "UQ_patients_phone"`);
     await queryRunner.query(
       `CREATE UNIQUE INDEX "UQ_patients_tenant_phone" ON "patients" ("tenantId", "phone")`,
@@ -75,8 +116,6 @@ export class AddTenancyAndBranches1750000000000 implements MigrationInterface {
       ADD CONSTRAINT "FK_patients_branch" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE CASCADE
     `);
 
-    await queryRunner.query(`ALTER TABLE "patient_history" ADD "tenantId" uuid NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "patient_history" ADD "branchId" uuid NOT NULL`);
     await queryRunner.query(
       `CREATE INDEX "IDX_patient_history_tenant_branch" ON "patient_history" ("tenantId", "branchId")`,
     );
@@ -85,8 +124,6 @@ export class AddTenancyAndBranches1750000000000 implements MigrationInterface {
       ADD CONSTRAINT "FK_patient_history_branch" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE CASCADE
     `);
 
-    await queryRunner.query(`ALTER TABLE "medicines" ADD "tenantId" uuid NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "medicines" ADD "branchId" uuid NOT NULL`);
     await queryRunner.query(`ALTER TABLE "medicines" DROP CONSTRAINT "UQ_medicines_name"`);
     await queryRunner.query(
       `CREATE UNIQUE INDEX "UQ_medicines_tenant_branch_name" ON "medicines" ("tenantId", "branchId", "name")`,
@@ -99,8 +136,6 @@ export class AddTenancyAndBranches1750000000000 implements MigrationInterface {
       ADD CONSTRAINT "FK_medicines_branch" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE CASCADE
     `);
 
-    await queryRunner.query(`ALTER TABLE "medicine_transactions" ADD "tenantId" uuid NOT NULL`);
-    await queryRunner.query(`ALTER TABLE "medicine_transactions" ADD "branchId" uuid NOT NULL`);
     await queryRunner.query(
       `CREATE INDEX "IDX_medicine_transactions_tenant_branch" ON "medicine_transactions" ("tenantId", "branchId")`,
     );

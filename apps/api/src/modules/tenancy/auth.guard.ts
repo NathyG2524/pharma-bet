@@ -36,10 +36,12 @@ export class AuthGuard implements CanActivate {
 
     if (!auth.tenantId) {
       if (allowTenantless) {
+        const roles = auth.roles ?? [];
+        const branchIds = auth.branchIds ?? [];
         request.authContext = {
           ...auth,
-          roles: auth.roles ?? [],
-          branchIds: auth.branchIds ?? [],
+          roles,
+          branchIds,
         };
         return true;
       }

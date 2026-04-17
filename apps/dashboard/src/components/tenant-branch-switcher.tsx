@@ -69,7 +69,7 @@ export function TenantBranchSwitcher() {
 
   useEffect(() => {
     if (!state.tenantId && tenants.length > 0) {
-      updateState({ tenantId: tenants[0].id, activeBranchId: "", branchIds: [] });
+      updateState({ tenantId: tenants[0].id, activeBranchId: null, branchIds: [] });
     }
   }, [tenants, state.tenantId, updateState]);
 
@@ -79,10 +79,10 @@ export function TenantBranchSwitcher() {
     if (!arraysEqual(branchIds, state.branchIds)) {
       patch.branchIds = branchIds;
     }
-    const currentActiveBranchId = state.activeBranchId ?? "";
+    const currentActiveBranchId = state.activeBranchId ?? null;
     let nextActiveBranchId = currentActiveBranchId;
     if (branchIds.length === 0) {
-      nextActiveBranchId = "";
+      nextActiveBranchId = null;
     } else if (!currentActiveBranchId || !branchIds.includes(currentActiveBranchId)) {
       nextActiveBranchId = branchIds[0];
     }
@@ -141,7 +141,7 @@ export function TenantBranchSwitcher() {
           id="tenant-switcher"
           value={state.tenantId}
           onChange={(e) =>
-            updateState({ tenantId: e.target.value, activeBranchId: "", branchIds: [] })
+            updateState({ tenantId: e.target.value, activeBranchId: null, branchIds: [] })
           }
           disabled={loadingTenants}
         >
