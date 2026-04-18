@@ -171,7 +171,7 @@ export class MedicinesService {
       let patientId: string | null = null;
       if (dto.patientId) {
         const ok = await patRepo.exists({
-          where: { id: dto.patientId, tenantId: scope.tenantId, branchId: scope.branchId },
+          where: { id: dto.patientId, tenantId: scope.tenantId },
         });
         if (!ok) {
           throw new NotFoundException(`Patient ${dto.patientId} not found`);
