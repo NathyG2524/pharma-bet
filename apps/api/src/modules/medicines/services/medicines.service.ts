@@ -240,17 +240,13 @@ export class MedicinesService {
         localCost: null,
       });
 
-    if (dto.reorderMin !== undefined) {
-      overlay.reorderMin = dto.reorderMin ?? null;
-    }
-    if (dto.reorderMax !== undefined) {
-      overlay.reorderMax = dto.reorderMax ?? null;
-    }
-    const nextMin = overlay.reorderMin;
-    const nextMax = overlay.reorderMax;
+    const nextMin = dto.reorderMin !== undefined ? (dto.reorderMin ?? null) : overlay.reorderMin;
+    const nextMax = dto.reorderMax !== undefined ? (dto.reorderMax ?? null) : overlay.reorderMax;
     if (nextMin != null && nextMax != null && nextMin > nextMax) {
       throw new BadRequestException("Reorder minimum cannot exceed maximum");
     }
+    overlay.reorderMin = nextMin;
+    overlay.reorderMax = nextMax;
     if (dto.binLocation !== undefined) {
       overlay.binLocation = dto.binLocation?.trim() || null;
     }
