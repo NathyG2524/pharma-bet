@@ -3,7 +3,22 @@ export interface MedicineDto {
   name: string;
   sku: string | null;
   unit: string | null;
+  isActive: boolean;
   stockQuantity: number;
+  reorderMin: number | null;
+  reorderMax: number | null;
+  binLocation: string | null;
+  localPrice: string | null;
+  localCost: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CanonicalMedicineDto {
+  id: string;
+  name: string;
+  sku: string | null;
+  unit: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +48,11 @@ export interface MedicineListResponse {
   total: number;
 }
 
+export interface CanonicalMedicineListResponse {
+  items: CanonicalMedicineDto[];
+  total: number;
+}
+
 export interface MedicineTransactionsResponse {
   items: MedicineTransactionDto[];
   total: number;
@@ -49,6 +69,14 @@ export interface UpdateMedicineInput {
   sku?: string | null;
   unit?: string | null;
   isActive?: boolean;
+}
+
+export interface UpdateMedicineOverlayInput {
+  reorderMin?: number | null;
+  reorderMax?: number | null;
+  binLocation?: string | null;
+  localPrice?: string | null;
+  localCost?: string | null;
 }
 
 export interface BuyMedicineInput {

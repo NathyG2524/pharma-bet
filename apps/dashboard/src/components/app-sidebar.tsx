@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
 import {
   Activity,
@@ -69,6 +70,14 @@ function NavLink({ href, label, icon: Icon }: NavItem) {
 }
 
 export function AppSidebar() {
+  const { state } = useAuthContext();
+  const isHqUser = state.roles.some((role) =>
+    ["hq_admin", "hq_user", "platform_admin"].includes(role),
+  );
+  const visibleInventoryLinks = isHqUser
+    ? inventoryLinks
+    : inventoryLinks.filter((item) => item.href !== "/inventory/new");
+
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">
       <div className="flex h-16 items-center px-6 gap-3">
@@ -109,7 +118,7 @@ export function AppSidebar() {
             Inventory
           </p>
           <div className="space-y-1">
-            {inventoryLinks.map((item) => (
+            {visibleInventoryLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>
