@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthContext } from "@/lib/auth-context";
 import { Command } from "cmdk";
 import { Activity, PackagePlus, Pill, Search, ShoppingCart, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,10 @@ import { useEffect, useState } from "react";
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { state } = useAuthContext();
+  const isHqUser = state.roles.some((role) =>
+    ["hq_admin", "hq_user", "platform_admin"].includes(role),
+  );
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -93,13 +98,15 @@ export function CommandPalette() {
               <UserPlus className="h-4 w-4" />
               Register New Patient
             </Command.Item>
-            <Command.Item
-              onSelect={() => runCommand(() => router.push("/inventory/new"))}
-              className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-md text-sm text-on_surface hover:bg-surface_container_high hover:text-on_surface aria-selected:bg-surface_container_high aria-selected:text-on_surface cursor-pointer transition-colors"
-            >
-              <PackagePlus className="h-4 w-4" />
-              Add Medicine to Inventory
-            </Command.Item>
+            {isHqUser && (
+              <Command.Item
+                onSelect={() => runCommand(() => router.push("/inventory/new"))}
+                className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-md text-sm text-on_surface hover:bg-surface_container_high hover:text-on_surface aria-selected:bg-surface_container_high aria-selected:text-on_surface cursor-pointer transition-colors"
+              >
+                <PackagePlus className="h-4 w-4" />
+                Add Medicine to Inventory
+              </Command.Item>
+            )}
             <Command.Item
               onSelect={() => runCommand(() => router.push("/inventory/sell"))}
               className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-md text-sm text-on_surface hover:bg-surface_container_high hover:text-on_surface aria-selected:bg-surface_container_high aria-selected:text-on_surface cursor-pointer transition-colors"

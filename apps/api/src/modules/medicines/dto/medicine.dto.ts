@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from "class-validator";
 
 export class CreateMedicineDto {
   @ApiProperty({ description: "Display name (unique)" })
@@ -44,4 +53,34 @@ export class UpdateMedicineDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+}
+
+export class UpdateMedicineOverlayDto {
+  @ApiPropertyOptional({ description: "Reorder minimum threshold" })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reorderMin?: number | null;
+
+  @ApiPropertyOptional({ description: "Reorder maximum threshold" })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reorderMax?: number | null;
+
+  @ApiPropertyOptional({ description: "Bin or shelf location" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  binLocation?: string | null;
+
+  @ApiPropertyOptional({ description: "Local sell price" })
+  @IsOptional()
+  @IsNumberString()
+  localPrice?: string | null;
+
+  @ApiPropertyOptional({ description: "Local cost" })
+  @IsOptional()
+  @IsNumberString()
+  localCost?: string | null;
 }

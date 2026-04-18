@@ -1,8 +1,19 @@
 "use client";
 
 import { medicinesApi } from "@/lib/api";
-import type { MedicineDto, MedicineTransactionDto } from "@drug-store/shared";
-import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@drug-store/ui";
+import { useAuthContext } from "@/lib/auth-context";
+import type { CanonicalMedicineDto, MedicineDto, MedicineTransactionDto } from "@drug-store/shared";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Select,
+} from "@drug-store/ui";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -18,8 +29,14 @@ function formatDt(iso: string) {
 export default function MedicineDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
+  const { state } = useAuthContext();
+  const isHqUser = state.roles.some((role) =>
+    ["hq_admin", "hq_user", "platform_admin"].includes(role),
+  );
+  const isBranchUser = state.roles.some((role) => ["branch_manager", "branch_user"].includes(role));
 
   const [medicine, setMedicine] = useState<MedicineDto | null>(null);
+  const [catalogItem, setCatalogItem] = useState<CanonicalMedicineDto | null>(null);
   const [transactions, setTransactions] = useState<MedicineTransactionDto[]>([]);
   const [totalTx, setTotalTx] = useState(0);
   const pageSize = 30;
@@ -27,28 +44,54 @@ export default function MedicineDetailPage() {
   const [txLoading, setTxLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const medicineId = medicine?.id;
+  const canonical = medicine ?? catalogItem;
+  const [catalogName, setCatalogName] = useState("");
+  const [catalogSku, setCatalogSku] = useState("");
+  const [catalogUnit, setCatalogUnit] = useState("");
+  const [catalogActive, setCatalogActive] = useState("true");
+  const [catalogSaving, setCatalogSaving] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogSuccess, setCatalogSuccess] = useState<string | null>(null);
+  const [overlayReorderMin, setOverlayReorderMin] = useState("");
+  const [overlayReorderMax, setOverlayReorderMax] = useState("");
+  const [overlayBin, setOverlayBin] = useState("");
+  const [overlayPrice, setOverlayPrice] = useState("");
+  const [overlayCost, setOverlayCost] = useState("");
+  const [overlaySaving, setOverlaySaving] = useState(false);
+  const [overlayError, setOverlayError] = useState<string | null>(null);
+  const [overlaySuccess, setOverlaySuccess] = useState<string | null>(null);
 
   const loadMedicine = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
     try {
-      const m = await medicinesApi.getMedicine(id);
-      setMedicine(m);
+      if (isBranchUser) {
+        const m = await medicinesApi.getMedicine(id);
+        setMedicine(m);
+        setCatalogItem(null);
+      } else if (isHqUser) {
+        const m = await medicinesApi.getCanonicalMedicine(id);
+        setCatalogItem(m);
+        setMedicine(null);
+      } else {
+        throw new Error("No access to this catalog item.");
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Not found");
       setMedicine(null);
+      setCatalogItem(null);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, isBranchUser, isHqUser]);
 
   useEffect(() => {
     void loadMedicine();
   }, [loadMedicine]);
 
   useEffect(() => {
-    if (!id || !medicineId) return;
+    if (!id || !medicineId || !isBranchUser) return;
     void (async () => {
       setTxLoading(true);
       try {
@@ -64,10 +107,27 @@ export default function MedicineDetailPage() {
         setTxLoading(false);
       }
     })();
-  }, [id, medicineId]);
+  }, [id, medicineId, isBranchUser]);
+
+  useEffect(() => {
+    if (!canonical) return;
+    setCatalogName(canonical.name);
+    setCatalogSku(canonical.sku ?? "");
+    setCatalogUnit(canonical.unit ?? "");
+    setCatalogActive(canonical.isActive ? "true" : "false");
+  }, [canonical]);
+
+  useEffect(() => {
+    if (!medicine) return;
+    setOverlayReorderMin(medicine.reorderMin != null ? String(medicine.reorderMin) : "");
+    setOverlayReorderMax(medicine.reorderMax != null ? String(medicine.reorderMax) : "");
+    setOverlayBin(medicine.binLocation ?? "");
+    setOverlayPrice(medicine.localPrice ?? "");
+    setOverlayCost(medicine.localCost ?? "");
+  }, [medicine]);
 
   const loadMore = async () => {
-    if (!id || txLoading || transactions.length >= totalTx) return;
+    if (!id || txLoading || transactions.length >= totalTx || !isBranchUser) return;
     setTxLoading(true);
     try {
       const res = await medicinesApi.getMedicineTransactions(id, {
@@ -88,7 +148,7 @@ export default function MedicineDetailPage() {
     );
   }
 
-  if (error || !medicine) {
+  if (error || !canonical) {
     return (
       <div className="max-w-4xl">
         <Alert variant="destructive">{error}</Alert>
@@ -98,6 +158,63 @@ export default function MedicineDetailPage() {
       </div>
     );
   }
+
+  const handleCatalogSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canonical || !isHqUser) return;
+    setCatalogError(null);
+    setCatalogSuccess(null);
+    setCatalogSaving(true);
+    try {
+      const updated = await medicinesApi.updateMedicine(canonical.id, {
+        name: catalogName.trim(),
+        sku: catalogSku.trim() || null,
+        unit: catalogUnit.trim() || null,
+        isActive: catalogActive === "true",
+      });
+      setCatalogItem(updated);
+      setMedicine((prev) => (prev ? { ...prev, ...updated, isActive: updated.isActive } : prev));
+      setCatalogSuccess("Canonical product updated.");
+    } catch (err) {
+      setCatalogError(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setCatalogSaving(false);
+    }
+  };
+
+  const handleOverlaySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!medicine || !isBranchUser) return;
+    setOverlayError(null);
+    setOverlaySuccess(null);
+    const reorderMin =
+      overlayReorderMin.trim() === "" ? null : Number.parseInt(overlayReorderMin, 10);
+    const reorderMax =
+      overlayReorderMax.trim() === "" ? null : Number.parseInt(overlayReorderMax, 10);
+    if (
+      (reorderMin != null && (Number.isNaN(reorderMin) || reorderMin < 0)) ||
+      (reorderMax != null && (Number.isNaN(reorderMax) || reorderMax < 0))
+    ) {
+      setOverlayError("Reorder min/max must be valid non-negative integers.");
+      return;
+    }
+    setOverlaySaving(true);
+    try {
+      const updated = await medicinesApi.updateMedicineOverlay(medicine.id, {
+        reorderMin,
+        reorderMax,
+        binLocation: overlayBin.trim() || null,
+        localPrice: overlayPrice.trim() || null,
+        localCost: overlayCost.trim() || null,
+      });
+      setMedicine(updated);
+      setOverlaySuccess("Overlay saved.");
+    } catch (err) {
+      setOverlayError(err instanceof Error ? err.message : "Failed to update overlay");
+    } finally {
+      setOverlaySaving(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl">
@@ -109,134 +226,298 @@ export default function MedicineDetailPage() {
           >
             ← Medicines
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{medicine.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{canonical?.name ?? "Medicine"}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            SKU: {medicine.sku ?? "—"} · Unit: {medicine.unit ?? "—"} · Stock:{" "}
-            <span className="font-semibold text-gray-900">{medicine.stockQuantity}</span>
-            {!medicine.isActive && (
+            SKU: {canonical?.sku ?? "—"} · Unit: {canonical?.unit ?? "—"}
+            {isBranchUser && (
+              <>
+                {" "}
+                · Stock:{" "}
+                <span className="font-semibold text-gray-900">{medicine?.stockQuantity ?? 0}</span>
+              </>
+            )}
+            {canonical && !canonical.isActive && (
               <Badge className="ml-2" variant="warning">
                 Inactive
               </Badge>
             )}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/inventory/buy">
-            <Button type="button" size="sm">
-              Buy
-            </Button>
-          </Link>
-          <Link href="/inventory/sell">
-            <Button type="button" size="sm" variant="outline">
-              Sell
-            </Button>
-          </Link>
-        </div>
+        {isBranchUser && (
+          <div className="flex gap-2">
+            <Link href="/inventory/buy">
+              <Button type="button" size="sm">
+                Buy
+              </Button>
+            </Link>
+            <Link href="/inventory/sell">
+              <Button type="button" size="sm" variant="outline">
+                Sell
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       <Card className="mb-6">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">SKU</p>
-            <p className="mt-1 font-medium text-gray-900">{medicine.sku ?? "—"}</p>
+            <p className="mt-1 font-medium text-gray-900">{canonical?.sku ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Unit</p>
-            <p className="mt-1 font-medium text-gray-900">{medicine.unit ?? "—"}</p>
+            <p className="mt-1 font-medium text-gray-900">{canonical?.unit ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-500">Stock</p>
-            <p className="mt-1 font-medium text-gray-900">{medicine.stockQuantity}</p>
+            <p className="mt-1 font-medium text-gray-900">
+              {isBranchUser ? (medicine?.stockQuantity ?? 0) : "—"}
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction history</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {txLoading && transactions.length === 0 ? (
-            <p className="text-sm text-gray-500">Loading history…</p>
-          ) : transactions.length === 0 ? (
-            <p className="text-sm text-gray-500">No transactions yet.</p>
-          ) : (
-            <>
-              <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
-                <table className="w-full text-left text-sm text-on_surface_variant">
-                  <thead className="sticky top-0 z-10 bg-surface_container_lowest">
-                    <tr>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        Type
-                      </th>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        Qty
-                      </th>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        Unit price
-                      </th>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        When
-                      </th>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        Patient
-                      </th>
-                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                        Notes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((t) => (
-                      <tr key={t.id} className="transition-colors hover:bg-surface_container_high">
-                        <td className="px-4 py-4">
-                          <span>
-                            {t.type === "BUY" ? (
-                              <Badge variant="success">{t.type}</Badge>
-                            ) : (
-                              <Badge variant="default">{t.type}</Badge>
-                            )}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-on_surface">{t.quantity}</td>
-                        <td className="px-4 py-4">{t.unitPrice ?? "—"}</td>
-                        <td className="px-4 py-4 text-on_surface_variant">
-                          {formatDt(t.recordedAt)}
-                        </td>
-                        <td className="px-4 py-4 text-on_surface_variant">
-                          {t.type === "SELL" && t.patient
-                            ? `${t.patient.name ?? t.patient.phone} (${t.patient.phone})`
-                            : t.type === "SELL"
-                              ? "Walk-in"
-                              : "—"}
-                        </td>
-                        <td
-                          className="max-w-[180px] truncate px-4 py-4 text-on_surface_variant"
-                          title={t.notes ?? undefined}
-                        >
-                          {t.notes ?? "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {isHqUser && canonical && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Canonical product</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCatalogSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="catalog-name" className="mb-1.5 block text-sm font-medium">
+                  Name
+                </label>
+                <Input
+                  id="catalog-name"
+                  value={catalogName}
+                  onChange={(e) => setCatalogName(e.target.value)}
+                  disabled={catalogSaving}
+                  required
+                />
               </div>
-              {transactions.length < totalTx && (
-                <div className="mt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={txLoading}
-                    onClick={() => void loadMore()}
-                  >
-                    {txLoading ? "Loading…" : "Load more"}
-                  </Button>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="catalog-sku" className="mb-1.5 block text-sm font-medium">
+                    SKU
+                  </label>
+                  <Input
+                    id="catalog-sku"
+                    value={catalogSku}
+                    onChange={(e) => setCatalogSku(e.target.value)}
+                    disabled={catalogSaving}
+                  />
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                <div>
+                  <label htmlFor="catalog-unit" className="mb-1.5 block text-sm font-medium">
+                    Unit
+                  </label>
+                  <Input
+                    id="catalog-unit"
+                    value={catalogUnit}
+                    onChange={(e) => setCatalogUnit(e.target.value)}
+                    disabled={catalogSaving}
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="catalog-active" className="mb-1.5 block text-sm font-medium">
+                  Status
+                </label>
+                <Select
+                  id="catalog-active"
+                  value={catalogActive}
+                  onChange={(e) => setCatalogActive(e.target.value)}
+                  disabled={catalogSaving}
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </Select>
+              </div>
+              {catalogError && <Alert variant="destructive">{catalogError}</Alert>}
+              {catalogSuccess && <Alert variant="success">{catalogSuccess}</Alert>}
+              <Button type="submit" disabled={catalogSaving}>
+                {catalogSaving ? "Saving…" : "Save canonical"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {isBranchUser && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Branch overlay</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleOverlaySubmit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="overlay-min" className="mb-1.5 block text-sm font-medium">
+                    Reorder min
+                  </label>
+                  <Input
+                    id="overlay-min"
+                    type="number"
+                    min={0}
+                    value={overlayReorderMin}
+                    onChange={(e) => setOverlayReorderMin(e.target.value)}
+                    disabled={overlaySaving}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="overlay-max" className="mb-1.5 block text-sm font-medium">
+                    Reorder max
+                  </label>
+                  <Input
+                    id="overlay-max"
+                    type="number"
+                    min={0}
+                    value={overlayReorderMax}
+                    onChange={(e) => setOverlayReorderMax(e.target.value)}
+                    disabled={overlaySaving}
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="overlay-bin" className="mb-1.5 block text-sm font-medium">
+                  Bin location
+                </label>
+                <Input
+                  id="overlay-bin"
+                  value={overlayBin}
+                  onChange={(e) => setOverlayBin(e.target.value)}
+                  disabled={overlaySaving}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="overlay-price" className="mb-1.5 block text-sm font-medium">
+                    Local price
+                  </label>
+                  <Input
+                    id="overlay-price"
+                    inputMode="decimal"
+                    value={overlayPrice}
+                    onChange={(e) => setOverlayPrice(e.target.value)}
+                    disabled={overlaySaving}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="overlay-cost" className="mb-1.5 block text-sm font-medium">
+                    Local cost
+                  </label>
+                  <Input
+                    id="overlay-cost"
+                    inputMode="decimal"
+                    value={overlayCost}
+                    onChange={(e) => setOverlayCost(e.target.value)}
+                    disabled={overlaySaving}
+                  />
+                </div>
+              </div>
+              {overlayError && <Alert variant="destructive">{overlayError}</Alert>}
+              {overlaySuccess && <Alert variant="success">{overlaySuccess}</Alert>}
+              <Button type="submit" disabled={overlaySaving}>
+                {overlaySaving ? "Saving…" : "Save overlay"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {isBranchUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction history</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {txLoading && transactions.length === 0 ? (
+              <p className="text-sm text-gray-500">Loading history…</p>
+            ) : transactions.length === 0 ? (
+              <p className="text-sm text-gray-500">No transactions yet.</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+                  <table className="w-full text-left text-sm text-on_surface_variant">
+                    <thead className="sticky top-0 z-10 bg-surface_container_lowest">
+                      <tr>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Type
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Qty
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Unit price
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          When
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Patient
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((t) => (
+                        <tr
+                          key={t.id}
+                          className="transition-colors hover:bg-surface_container_high"
+                        >
+                          <td className="px-4 py-4">
+                            <span>
+                              {t.type === "BUY" ? (
+                                <Badge variant="success">{t.type}</Badge>
+                              ) : (
+                                <Badge variant="default">{t.type}</Badge>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-on_surface">{t.quantity}</td>
+                          <td className="px-4 py-4">{t.unitPrice ?? "—"}</td>
+                          <td className="px-4 py-4 text-on_surface_variant">
+                            {formatDt(t.recordedAt)}
+                          </td>
+                          <td className="px-4 py-4 text-on_surface_variant">
+                            {t.type === "SELL" && t.patient
+                              ? `${t.patient.name ?? t.patient.phone} (${t.patient.phone})`
+                              : t.type === "SELL"
+                                ? "Walk-in"
+                                : "—"}
+                          </td>
+                          <td
+                            className="max-w-[180px] truncate px-4 py-4 text-on_surface_variant"
+                            title={t.notes ?? undefined}
+                          >
+                            {t.notes ?? "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {transactions.length < totalTx && (
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={txLoading}
+                      onClick={() => void loadMore()}
+                    >
+                      {txLoading ? "Loading…" : "Load more"}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
