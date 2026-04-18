@@ -1,4 +1,10 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { PatientHistory } from "../../../entities/patient-history.entity";
@@ -38,7 +44,7 @@ export class PatientsService {
 
   private getTenantScope(context: AuthContext) {
     if (!context.tenantId) {
-      throw new NotFoundException("Tenant context required");
+      throw new UnauthorizedException("Tenant context required");
     }
     return { tenantId: context.tenantId };
   }
