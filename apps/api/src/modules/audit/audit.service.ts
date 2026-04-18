@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { AuditEvent } from "../../entities/audit-event.entity";
@@ -17,7 +17,7 @@ export class AuditService {
     patientId: string,
   ): Promise<AuditEvent> {
     if (!context.tenantId || !context.userId) {
-      throw new NotFoundException("Audit context requires tenant and user");
+      throw new UnauthorizedException("Audit context requires tenant and user");
     }
     const event = this.auditRepo.create({
       tenantId: context.tenantId,
