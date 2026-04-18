@@ -1,4 +1,10 @@
-import { branchesApi, medicinesApi, patientsApi, tenantsApi } from "@drug-store/shared";
+import {
+  auditEventsApi,
+  branchesApi,
+  medicinesApi,
+  patientsApi,
+  tenantsApi,
+} from "@drug-store/shared";
 import { getAuthHeaders } from "./auth-storage";
 
 const apiUrl =
@@ -13,6 +19,7 @@ if (apiUrl) {
   medicinesApi.configure(options);
   branchesApi.configure(options);
   tenantsApi.configure(options);
+  auditEventsApi.configure(options);
 }
 
-export { patientsApi, medicinesApi, branchesApi, tenantsApi };
+export { patientsApi, medicinesApi, branchesApi, tenantsApi, auditEventsApi };

@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { MedicinesModule } from "./modules/medicines/medicines.module";
 import { PatientsModule } from "./modules/patients/patients.module";
@@ -12,6 +13,7 @@ import { typeOrmConfig } from "./typeorm-config";
     TypeOrmModule.forRoot(typeOrmConfig),
     TenancyModule,
     TenantsModule,
+    AuditEventsModule,
     BranchesModule,
     PatientsModule,
     MedicinesModule,
