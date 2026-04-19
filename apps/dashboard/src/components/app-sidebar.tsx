@@ -4,6 +4,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
 import {
   Activity,
+  Bell,
   ClipboardList,
   LineChart,
   PackagePlus,
@@ -23,7 +24,10 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const mainLinks: NavItem[] = [{ href: "/", label: "Overview", icon: Activity }];
+const mainLinks: NavItem[] = [
+  { href: "/", label: "Overview", icon: Activity },
+  { href: "/notifications", label: "Notifications", icon: Bell },
+];
 
 const patientLinks: NavItem[] = [
   { href: "/patients/lookup", label: "Lookup patient", icon: Search },

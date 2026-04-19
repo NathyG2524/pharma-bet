@@ -31,7 +31,13 @@ export type {
   TenantDto,
   UserRole,
 } from "./types/tenancy";
+export type {
+  CreatePoPendingBranchApprovalNotificationInput,
+  NotificationDispatchResult,
+  NotificationDto,
+} from "./types/notification";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
+export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
