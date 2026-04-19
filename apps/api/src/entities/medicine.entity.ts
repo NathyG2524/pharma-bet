@@ -3,30 +3,26 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
-  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Branch } from "./branch.entity";
+import { MedicineOverlay } from "./medicine-overlay.entity";
 import { MedicineTransaction } from "./medicine-transaction.entity";
 
+export enum MedicineStatus {
+  CANONICAL = "canonical",
+  DRAFT = "draft",
+}
+
 @Entity({ name: "medicines" })
-@Index("UQ_medicines_tenant_branch_name", ["tenantId", "branchId", "name"], { unique: true })
+@Index("UQ_medicines_tenant_name", ["tenantId", "name"], { unique: true })
 export class Medicine {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ type: "uuid" })
   tenantId: string;
-
-  @Column({ type: "uuid" })
-  branchId: string;
-
-  @ManyToOne(() => Branch, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "branchId" })
-  branch: Branch;
 
   @Column()
   name: string;
@@ -37,17 +33,34 @@ export class Medicine {
   @Column({ type: "varchar", nullable: true })
   unit: string | null;
 
-  @Column({ type: "int", default: 0 })
-  stockQuantity: number;
+  @Column({ type: "varchar", nullable: true })
+  barcode: string | null;
 
   @Column({ type: "boolean", default: true })
   isActive: boolean;
+
+  @Column({
+    type: "enum",
+    enum: MedicineStatus,
+    enumName: "medicine_status_enum",
+    default: MedicineStatus.CANONICAL,
+  })
+  status: MedicineStatus;
+
+  @Column({ type: "uuid", nullable: true })
+  draftBranchId: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
+
+  @OneToMany(
+    () => MedicineOverlay,
+    (overlay) => overlay.medicine,
+  )
+  overlays: MedicineOverlay[];
 
   @OneToMany(
     () => MedicineTransaction,

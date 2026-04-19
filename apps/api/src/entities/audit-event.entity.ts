@@ -11,8 +11,9 @@ import { Tenant } from "./tenant.entity";
 
 @Entity({ name: "audit_events" })
 @Index("IDX_audit_events_tenant_created", ["tenantId", "createdAt"])
-@Index("IDX_audit_events_tenant_actor", ["tenantId", "actorUserId"])
 @Index("IDX_audit_events_tenant_entity", ["tenantId", "entityType"])
+@Index("IDX_audit_events_tenant_patient", ["tenantId", "patientId"])
+@Index("IDX_audit_events_tenant_user", ["tenantId", "actorUserId"])
 export class AuditEvent {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -24,7 +25,10 @@ export class AuditEvent {
   @JoinColumn({ name: "tenantId" })
   tenant: Tenant;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "uuid", nullable: true })
+  branchId: string | null;
+
+  @Column({ name: "userId", type: "varchar" })
   actorUserId: string;
 
   @Column({ type: "varchar" })
@@ -35,6 +39,9 @@ export class AuditEvent {
 
   @Column({ type: "varchar" })
   entityId: string;
+
+  @Column({ type: "uuid", nullable: true })
+  patientId: string | null;
 
   @Column({ type: "jsonb", default: () => "'{}'" })
   metadata: Record<string, unknown>;

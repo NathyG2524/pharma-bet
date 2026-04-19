@@ -161,6 +161,12 @@ Deliver a **multi-tenant pharmacy operations platform** where:
 - Introduce **lot** entities with **status**, **expiry**, **unit cost**, **received reference** (PO receipt line).
 - Introduce **approval tables** or **generic approval instances** referencing domain objects (PO, adjustment, variance, return).
 
+### Patient tenancy migration (validation)
+
+- Migration `AddTenancyAndBranches1750000000000` seeds a **Legacy tenant/branch** and backfills null `tenantId`/`branchId` for `patients` and `patient_history`.
+- Uniqueness is enforced on **(`tenantId`, `phone`)** via `UQ_patients_tenant_phone`.
+- Sample data validation: create two tenants/branches, insert patients with the same phone in each tenant, run the migration, and confirm the legacy backfill plus per-tenant uniqueness (duplicates allowed across tenants, rejected within a tenant).
+
 ### API contracts (directional)
 
 - All mutating endpoints require **tenant context** and enforce **branch permissions**.

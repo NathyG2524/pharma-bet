@@ -6,12 +6,19 @@ export type {
   CreatePatientHistoryInput,
 } from "./types/patient";
 export type {
+  CanonicalMedicineDto,
+  CanonicalMedicineListResponse,
   MedicineDto,
+  MedicineStatus,
   MedicineTransactionDto,
   MedicineListResponse,
   MedicineTransactionsResponse,
   CreateMedicineInput,
+  CreateDraftMedicineInput,
+  DedupeHintDto,
+  DedupeCheckResponse,
   UpdateMedicineInput,
+  UpdateMedicineOverlayInput,
   BuyMedicineInput,
   SellMedicineInput,
 } from "./types/medicine";

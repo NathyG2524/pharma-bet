@@ -1,8 +1,10 @@
 "use client";
 
+import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
 import {
   Activity,
+  ClipboardList,
   LineChart,
   PackagePlus,
   Pill,
@@ -32,6 +34,14 @@ const patientLinks: NavItem[] = [
 const inventoryLinks: NavItem[] = [
   { href: "/inventory", label: "Medicines", icon: Pill },
   { href: "/inventory/new", label: "Add medicine", icon: PackagePlus },
+  { href: "/inventory/drafts", label: "Draft medicines", icon: ClipboardList },
+  { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
+  { href: "/inventory/sell", label: "Sell", icon: LineChart },
+];
+
+const branchInventoryLinks: NavItem[] = [
+  { href: "/inventory", label: "Medicines", icon: Pill },
+  { href: "/inventory/new-draft", label: "Add draft medicine", icon: PackagePlus },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
@@ -73,6 +83,12 @@ function NavLink({ href, label, icon: Icon }: NavItem) {
 }
 
 export function AppSidebar() {
+  const { state } = useAuthContext();
+  const isHqUser = state.roles.some((role) =>
+    ["hq_admin", "hq_user", "platform_admin"].includes(role),
+  );
+  const visibleInventoryLinks = isHqUser ? inventoryLinks : branchInventoryLinks;
+
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">
       <div className="flex h-16 items-center px-6 gap-3">
@@ -113,7 +129,7 @@ export function AppSidebar() {
             Inventory
           </p>
           <div className="space-y-1">
-            {inventoryLinks.map((item) => (
+            {visibleInventoryLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>

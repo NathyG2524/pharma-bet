@@ -1,7 +1,8 @@
 "use client";
 
 import { medicinesApi } from "@/lib/api";
-import type { MedicineDto } from "@drug-store/shared";
+import { useAuthContext } from "@/lib/auth-context";
+import type { CanonicalMedicineDto, MedicineDto } from "@drug-store/shared";
 import {
   Alert,
   Badge,
@@ -17,9 +18,15 @@ import { useCallback, useEffect, useState } from "react";
 
 export default function InventoryPage() {
   const LOW_STOCK = 10;
+  const { state } = useAuthContext();
+  const isHqUser = state.roles.some((role) =>
+    ["hq_admin", "hq_user", "platform_admin"].includes(role),
+  );
+  const isBranchUser = state.roles.some((role) => ["branch_manager", "branch_user"].includes(role));
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [items, setItems] = useState<MedicineDto[]>([]);
+  const [catalogItems, setCatalogItems] = useState<CanonicalMedicineDto[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,20 +40,33 @@ export default function InventoryPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await medicinesApi.listMedicines({
-        search: debounced || undefined,
-        limit: 100,
-        offset: 0,
-      });
-      setItems(res.items);
-      setTotal(res.total);
+      if (isHqUser) {
+        const res = await medicinesApi.listCanonicalMedicines({
+          search: debounced || undefined,
+          limit: 100,
+          offset: 0,
+        });
+        setCatalogItems(res.items);
+        setItems([]);
+        setTotal(res.total);
+      } else {
+        const res = await medicinesApi.listMedicines({
+          search: debounced || undefined,
+          limit: 100,
+          offset: 0,
+        });
+        setItems(res.items);
+        setCatalogItems([]);
+        setTotal(res.total);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
       setItems([]);
+      setCatalogItems([]);
     } finally {
       setLoading(false);
     }
-  }, [debounced]);
+  }, [debounced, isHqUser]);
 
   useEffect(() => {
     load();
@@ -57,9 +77,25 @@ export default function InventoryPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Medicines</h1>
         <div className="flex gap-2">
-          <Link href="/inventory/new">
-            <Button type="button">Add medicine</Button>
-          </Link>
+          {isHqUser && (
+            <Link href="/inventory/new">
+              <Button type="button">Add medicine</Button>
+            </Link>
+          )}
+          {isHqUser && (
+            <Link href="/inventory/drafts">
+              <Button type="button" variant="outline">
+                View drafts
+              </Button>
+            </Link>
+          )}
+          {isBranchUser && (
+            <Link href="/inventory/new-draft">
+              <Button type="button" variant="outline">
+                Add draft medicine
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
       <Card className="mb-6">
@@ -84,62 +120,134 @@ export default function InventoryPage() {
         </Alert>
       )}
       <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
-        <table className="w-full text-left text-sm text-on_surface_variant">
-          <thead className="sticky top-0 z-10 bg-surface_container_lowest">
-            <tr>
-              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                Name
-              </th>
-              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                SKU
-              </th>
-              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                Unit
-              </th>
-              <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
-                Stock
-              </th>
-              <th className="px-4 py-4" />
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 && !loading ? (
+        {isHqUser ? (
+          <table className="w-full text-left text-sm text-on_surface_variant">
+            <thead className="sticky top-0 z-10 bg-surface_container_lowest">
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-on_surface_variant">
-                  No medicines yet.{" "}
-                  <Link
-                    href="/inventory/new"
-                    className="font-medium text-primary underline hover:text-primary_container"
-                  >
-                    Add one
-                  </Link>
-                </td>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Name
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  SKU
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Unit
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Status
+                </th>
+                <th className="px-4 py-4" />
               </tr>
-            ) : (
-              items.map((m) => (
-                <tr key={m.id} className="transition-colors hover:bg-surface_container_high">
-                  <td className="px-4 py-4 font-medium text-on_surface">{m.name}</td>
-                  <td className="px-4 py-4">{m.sku ?? "—"}</td>
-                  <td className="px-4 py-4">{m.unit ?? "—"}</td>
-                  <td className="px-4 py-4 text-on_surface">
-                    <div className="flex items-center gap-2">
-                      <span>{m.stockQuantity}</span>
-                      {m.stockQuantity <= LOW_STOCK && <Badge variant="warning">Low stock</Badge>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
+            </thead>
+            <tbody>
+              {catalogItems.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-on_surface_variant">
+                    No catalog medicines yet.{" "}
                     <Link
-                      href={`/inventory/${m.id}`}
-                      className="font-medium text-primary hover:text-primary_container hover:underline"
+                      href="/inventory/new"
+                      className="font-medium text-primary underline hover:text-primary_container"
                     >
-                      View
+                      Add one
                     </Link>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                catalogItems.map((m) => (
+                  <tr key={m.id} className="transition-colors hover:bg-surface_container_high">
+                    <td className="px-4 py-4 font-medium text-on_surface">{m.name}</td>
+                    <td className="px-4 py-4">{m.sku ?? "—"}</td>
+                    <td className="px-4 py-4">{m.unit ?? "—"}</td>
+                    <td className="px-4 py-4 text-on_surface">
+                      {m.isActive ? (
+                        <Badge variant="success">Active</Badge>
+                      ) : (
+                        <Badge>Inactive</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/inventory/${m.id}`}
+                        className="font-medium text-primary hover:text-primary_container hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        ) : (
+          <table className="w-full text-left text-sm text-on_surface_variant">
+            <thead className="sticky top-0 z-10 bg-surface_container_lowest">
+              <tr>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Name
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  SKU
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Unit
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Stock
+                </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Type
+                </th>
+                <th className="px-4 py-4" />
+              </tr>
+            </thead>
+            <tbody>
+              {items.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-on_surface_variant">
+                    No medicines yet. Ask HQ to publish a product or{" "}
+                    <Link
+                      href="/inventory/new-draft"
+                      aria-label="Create a new draft medicine entry"
+                      className="font-medium text-primary underline hover:text-primary_container"
+                    >
+                      add a draft medicine
+                    </Link>
+                    .
+                  </td>
+                </tr>
+              ) : (
+                items.map((m) => (
+                  <tr key={m.id} className="transition-colors hover:bg-surface_container_high">
+                    <td className="px-4 py-4 font-medium text-on_surface">{m.name}</td>
+                    <td className="px-4 py-4">{m.sku ?? "—"}</td>
+                    <td className="px-4 py-4">{m.unit ?? "—"}</td>
+                    <td className="px-4 py-4 text-on_surface">
+                      <div className="flex items-center gap-2">
+                        <span>{m.stockQuantity}</span>
+                        {m.stockQuantity <= LOW_STOCK && <Badge variant="warning">Low stock</Badge>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      {m.status === "draft" ? (
+                        <Badge variant="warning">Draft</Badge>
+                      ) : (
+                        <Badge variant="success">Canonical</Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/inventory/${m.id}`}
+                        className="font-medium text-primary hover:text-primary_container hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
