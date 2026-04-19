@@ -156,7 +156,9 @@ export default function NewDraftMedicinePage() {
 
             {dedupeHints.length > 0 && (
               <Alert variant="warning">
-                <strong>Possible duplicate{dedupeHints.length > 1 ? "s" : ""} detected</strong>
+                <h3 className="font-semibold">
+                  Possible duplicate{dedupeHints.length > 1 ? "s" : ""} detected
+                </h3>
                 <ul className="mt-2 space-y-1 text-xs">
                   {dedupeHints.map((h) => (
                     <li key={h.id} className="flex items-center gap-2">
