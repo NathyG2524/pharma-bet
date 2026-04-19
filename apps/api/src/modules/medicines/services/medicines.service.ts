@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Brackets, In, QueryFailedError, type Repository } from "typeorm";
+import { Brackets, In, type Repository } from "typeorm";
 import { InventoryLot } from "../../../entities/inventory-lot.entity";
 import {
   InventoryMovement,
@@ -21,6 +21,7 @@ import {
 import { Medicine, MedicineStatus } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
 import { isLotExpired } from "../../inventory/lot-expiry";
+import { saveLotWithRetry, saveOverlayWithRetry } from "../../inventory/lot-update";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
 import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
@@ -698,57 +699,3 @@ export class MedicinesService {
     return { items, total };
   }
 }
-
-const saveOverlayWithRetry = async (
-  repo: Repository<MedicineOverlay>,
-  entity: MedicineOverlay,
-  delta: number,
-  lookup: { tenantId: string; branchId: string; medicineId: string },
-): Promise<MedicineOverlay> => {
-  try {
-    return await repo.save(entity);
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      const existing = await repo.findOne({
-        where: lookup,
-        lock: { mode: "pessimistic_write" },
-      });
-      if (!existing) throw error;
-      existing.stockQuantity += delta;
-      return repo.save(existing);
-    }
-    throw error;
-  }
-};
-
-const saveLotWithRetry = async (
-  repo: Repository<InventoryLot>,
-  entity: InventoryLot,
-  delta: number,
-  lookup: {
-    tenantId: string;
-    branchId: string;
-    medicineId: string;
-    lotCode: string;
-    expiryDate: string;
-    unitCost: string;
-  },
-): Promise<InventoryLot> => {
-  try {
-    return await repo.save(entity);
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      const existing = await repo.findOne({
-        where: lookup,
-        lock: { mode: "pessimistic_write" },
-      });
-      if (!existing) throw error;
-      existing.quantityOnHand += delta;
-      return repo.save(existing);
-    }
-    throw error;
-  }
-};
-
-const isUniqueViolation = (error: unknown) =>
-  error instanceof QueryFailedError && (error as { code?: string }).code === "23505";

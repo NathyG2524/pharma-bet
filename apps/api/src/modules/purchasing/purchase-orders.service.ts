@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, QueryFailedError, type Repository } from "typeorm";
+import { In, type Repository } from "typeorm";
 import { Branch } from "../../entities/branch.entity";
 import { InventoryLot } from "../../entities/inventory-lot.entity";
 import {
@@ -22,8 +22,10 @@ import { PurchaseOrderReceiptLine } from "../../entities/purchase-order-receipt-
 import { PurchaseOrderReceipt } from "../../entities/purchase-order-receipt.entity";
 import { PurchaseOrder, PurchaseOrderStatus } from "../../entities/purchase-order.entity";
 import { isLotExpired } from "../inventory/lot-expiry";
+import { saveLotWithRetry, saveOverlayWithRetry } from "../inventory/lot-update";
 import { MedicinesService } from "../medicines/services/medicines.service";
 import type { AuthContext } from "../tenancy/auth-context";
+import { isHqRole } from "../tenancy/role-utils";
 import type { CreatePurchaseOrderDto } from "./dto/create-purchase-order.dto";
 import type { ReceivePurchaseOrderDto } from "./dto/receive-purchase-order.dto";
 
@@ -482,60 +484,3 @@ export class PurchaseOrdersService {
     };
   }
 }
-
-const saveOverlayWithRetry = async (
-  repo: Repository<MedicineOverlay>,
-  entity: MedicineOverlay,
-  delta: number,
-  lookup: { tenantId: string; branchId: string; medicineId: string },
-): Promise<MedicineOverlay> => {
-  try {
-    return await repo.save(entity);
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      const existing = await repo.findOne({
-        where: lookup,
-        lock: { mode: "pessimistic_write" },
-      });
-      if (!existing) throw error;
-      existing.stockQuantity += delta;
-      return repo.save(existing);
-    }
-    throw error;
-  }
-};
-
-const saveLotWithRetry = async (
-  repo: Repository<InventoryLot>,
-  entity: InventoryLot,
-  delta: number,
-  lookup: {
-    tenantId: string;
-    branchId: string;
-    medicineId: string;
-    lotCode: string;
-    expiryDate: string;
-    unitCost: string;
-  },
-): Promise<InventoryLot> => {
-  try {
-    return await repo.save(entity);
-  } catch (error) {
-    if (isUniqueViolation(error)) {
-      const existing = await repo.findOne({
-        where: lookup,
-        lock: { mode: "pessimistic_write" },
-      });
-      if (!existing) throw error;
-      existing.quantityOnHand += delta;
-      return repo.save(existing);
-    }
-    throw error;
-  }
-};
-
-const isUniqueViolation = (error: unknown) =>
-  error instanceof QueryFailedError && (error as { code?: string }).code === "23505";
-
-const isHqRole = (context: AuthContext) =>
-  context.roles?.some((role) => ["hq_admin", "hq_user", "platform_admin"].includes(role));

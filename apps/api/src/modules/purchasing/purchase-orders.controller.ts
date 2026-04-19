@@ -1,17 +1,14 @@
 import { Body, Controller, Get, Inject, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiTags } from "@nestjs/swagger";
-import { UserRole } from "../../entities/user-membership.entity";
 import type { AuthContext } from "../tenancy/auth-context";
 import { AuthContextParam, Roles } from "../tenancy/auth.decorators";
 import { AuthGuard } from "../tenancy/auth.guard";
 import { BranchGuard } from "../tenancy/branch.guard";
+import { BRANCH_ROLES, HQ_ROLES } from "../tenancy/role-utils";
 import { RolesGuard } from "../tenancy/roles.guard";
 import { CreatePurchaseOrderDto } from "./dto/create-purchase-order.dto";
 import { ReceivePurchaseOrderDto } from "./dto/receive-purchase-order.dto";
 import { PurchaseOrdersService } from "./purchase-orders.service";
-
-const HQ_ROLES = [UserRole.HQ_ADMIN, UserRole.HQ_USER, UserRole.PLATFORM_ADMIN];
-const BRANCH_ROLES = [UserRole.BRANCH_MANAGER, UserRole.BRANCH_USER];
 
 @Controller("purchase-orders")
 @ApiTags("Purchase Orders")
