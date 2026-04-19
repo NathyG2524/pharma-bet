@@ -6,6 +6,7 @@ import { Branch } from "../../../entities/branch.entity";
 import { TaxCategory } from "../../../entities/tax-category.entity";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { UpdateBranchTaxSettingsDto } from "../dto/update-branch-tax-settings.dto";
+import { normalizeTaxRate } from "../tax-rate";
 
 @Injectable()
 export class BranchTaxSettingsService {
@@ -23,17 +24,6 @@ export class BranchTaxSettingsService {
       throw new NotFoundException("Tenant context required");
     }
     return { tenantId: context.tenantId };
-  }
-
-  private normalizeRate(rate: string): string {
-    const parsed = Number.parseFloat(rate);
-    if (!Number.isFinite(parsed)) {
-      throw new BadRequestException("Tax rate must be a valid number");
-    }
-    if (parsed < 0 || parsed > 1) {
-      throw new BadRequestException("Tax rate must be between 0 and 1");
-    }
-    return parsed.toFixed(4);
   }
 
   private async assertBranch(tenantId: string, branchId: string): Promise<void> {
@@ -99,7 +89,7 @@ export class BranchTaxSettingsService {
 
     if (dto.taxRateOverride !== undefined) {
       existing.taxRateOverride =
-        dto.taxRateOverride === null ? null : this.normalizeRate(dto.taxRateOverride);
+        dto.taxRateOverride === null ? null : normalizeTaxRate(dto.taxRateOverride);
     }
 
     return this.branchTaxRepo.save(existing);
