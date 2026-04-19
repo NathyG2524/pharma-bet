@@ -636,31 +636,43 @@ export class MedicinesService {
         }
         patientId = dto.patientId;
       }
-      const lots = await lotRepo
+      const totalRow = await lotRepo
         .createQueryBuilder("lot")
+        .select("SUM(lot.quantityOnHand)", "total")
         .where("lot.tenantId = :tenantId", { tenantId: scope.tenantId })
         .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
         .andWhere("lot.medicineId = :medicineId", { medicineId })
-        .andWhere("lot.quantityOnHand > 0")
-        .orderBy("lot.expiryDate", "ASC")
-        .addOrderBy("lot.createdAt", "ASC")
-        .setLock("pessimistic_write")
-        .getMany();
-      const available = lots.reduce((sum, lot) => sum + lot.quantityOnHand, 0);
-      if (lots.length > 0 && available < dto.quantity) {
+        .getRawOne<{ total: string | null }>();
+      const available = Number(totalRow?.total ?? 0);
+      if (available > 0 && available < dto.quantity) {
         throw new ConflictException("Not enough stock");
       }
-      if (lots.length === 0 && overlay.stockQuantity < dto.quantity) {
+      if (available === 0 && overlay.stockQuantity < dto.quantity) {
         throw new ConflictException("Not enough stock");
       }
-      if (lots.length > 0) {
+      if (available > 0) {
         let remaining = dto.quantity;
-        for (const lot of lots) {
-          if (remaining <= 0) break;
+        while (remaining > 0) {
+          const lot = await lotRepo
+            .createQueryBuilder("lot")
+            .where("lot.tenantId = :tenantId", { tenantId: scope.tenantId })
+            .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
+            .andWhere("lot.medicineId = :medicineId", { medicineId })
+            .andWhere("lot.quantityOnHand > 0")
+            .orderBy("lot.expiryDate", "ASC")
+            .addOrderBy("lot.createdAt", "ASC")
+            .setLock("pessimistic_write")
+            .getOne();
+          if (!lot) {
+            break;
+          }
           const take = Math.min(remaining, lot.quantityOnHand);
           lot.quantityOnHand -= take;
           remaining -= take;
           await lotRepo.save(lot);
+        }
+        if (remaining > 0) {
+          throw new ConflictException("Not enough stock");
         }
       }
       overlay.stockQuantity -= dto.quantity;

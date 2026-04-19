@@ -108,11 +108,13 @@ export class InventoryService {
 }
 
 const sumDecimalStrings = (values: string[], scale = 4): string => {
+  // Convert decimal strings to fixed-point integers (scale = number of decimal places).
   const factor = BigInt(10 ** scale);
   const total = values.reduce((acc, raw) => {
     if (!raw) return acc;
     const [intPart, fracPart = ""] = String(raw).split(".");
     const normalizedFrac = fracPart.padEnd(scale, "0").slice(0, scale);
+    // Track sign separately to avoid issues with negative fixed-point math.
     const signed = intPart.startsWith("-") ? -1n : 1n;
     const absInt = intPart.replace("-", "") || "0";
     const scaled = BigInt(absInt) * factor + BigInt(normalizedFrac || "0");
