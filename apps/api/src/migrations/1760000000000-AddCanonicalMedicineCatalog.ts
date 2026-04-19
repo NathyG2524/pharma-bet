@@ -56,8 +56,8 @@ export class AddCanonicalMedicineCatalog1760000000000 implements MigrationInterf
     await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "reorderMin" integer`);
     await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "reorderMax" integer`);
     await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "binLocation" character varying`);
-    await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "localPrice" numeric(14,4)`);
-    await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "localCost" numeric(14,4)`);
+    await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "localPrice" decimal(14,4)`);
+    await queryRunner.query(`ALTER TABLE "medicine_overlays" ADD "localCost" decimal(14,4)`);
     await queryRunner.query(`ALTER TABLE "medicine_overlays" DROP COLUMN "name"`);
     await queryRunner.query(`ALTER TABLE "medicine_overlays" DROP COLUMN "sku"`);
     await queryRunner.query(`ALTER TABLE "medicine_overlays" DROP COLUMN "unit"`);

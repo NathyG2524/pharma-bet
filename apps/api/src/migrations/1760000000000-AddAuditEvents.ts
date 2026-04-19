@@ -9,7 +9,7 @@ export class AddAuditEvents1760000000000 implements MigrationInterface {
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "tenantId" uuid NOT NULL,
         "branchId" uuid,
-        "userId" character varying NOT NULL,
+        "actorUserId" character varying NOT NULL,
         "action" character varying NOT NULL,
         "entityType" character varying NOT NULL,
         "entityId" character varying NOT NULL,
@@ -30,12 +30,12 @@ export class AddAuditEvents1760000000000 implements MigrationInterface {
       `CREATE INDEX "IDX_audit_events_tenant_patient" ON "audit_events" ("tenantId", "patientId")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_audit_events_tenant_user" ON "audit_events" ("tenantId", "userId")`,
+      `CREATE INDEX "IDX_audit_events_tenant_actor" ON "audit_events" ("tenantId", "actorUserId")`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_user"`);
+    await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_actor"`);
     await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_patient"`);
     await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_entity"`);
     await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_created"`);
