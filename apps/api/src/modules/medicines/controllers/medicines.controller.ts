@@ -21,7 +21,9 @@ import { BranchGuard } from "../../tenancy/branch.guard";
 import { RolesGuard } from "../../tenancy/roles.guard";
 import type { BuyMedicineDto, SellMedicineDto } from "../dto/medicine-transaction.dto";
 import type {
+  CreateDraftMedicineDto,
   CreateMedicineDto,
+  DedupeCheckQueryDto,
   UpdateMedicineDto,
   UpdateMedicineOverlayDto,
 } from "../dto/medicine.dto";
@@ -69,6 +71,28 @@ export class MedicinesController {
     return this.medicinesService.create(context, dto);
   }
 
+  @Get("catalog/drafts")
+  @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES)
+  @ApiQuery({ name: "search", required: false })
+  @ApiQuery({ name: "limit", required: false })
+  @ApiQuery({ name: "offset", required: false })
+  async listCatalogDrafts(
+    @AuthContextParam() context: AuthContext,
+    @Query("search") search?: string,
+    @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit?: number,
+    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number,
+  ) {
+    return this.medicinesService.listDrafts(context, { search, limit, offset });
+  }
+
+  @Post("catalog/draft/:id/promote")
+  @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES)
+  async promoteDraft(@AuthContextParam() context: AuthContext, @Param("id") id: string) {
+    return this.medicinesService.promoteDraft(context, id);
+  }
+
   @Get("catalog/:id")
   @UseGuards(RolesGuard)
   @Roles(...HQ_ROLES)
@@ -85,6 +109,22 @@ export class MedicinesController {
     @Body() dto: UpdateMedicineDto,
   ) {
     return this.medicinesService.update(context, id, dto);
+  }
+
+  @Get("dedupe-check")
+  @UseGuards(BranchGuard)
+  @ApiQuery({ name: "name", required: false })
+  @ApiQuery({ name: "sku", required: false })
+  @ApiQuery({ name: "barcode", required: false })
+  async dedupeCheck(@AuthContextParam() context: AuthContext, @Query() query: DedupeCheckQueryDto) {
+    return this.medicinesService.dedupeCheck(context, query);
+  }
+
+  @Post("draft")
+  @UseGuards(BranchGuard, RolesGuard)
+  @Roles(...BRANCH_ROLES)
+  async createDraft(@AuthContextParam() context: AuthContext, @Body() dto: CreateDraftMedicineDto) {
+    return this.medicinesService.createDraft(context, dto);
   }
 
   @Get()

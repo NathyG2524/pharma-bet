@@ -28,6 +28,58 @@ export class CreateMedicineDto {
   @IsString()
   @MaxLength(50)
   unit?: string;
+
+  @ApiPropertyOptional({ description: "Barcode or GTIN" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  barcode?: string;
+}
+
+export class CreateDraftMedicineDto {
+  @ApiProperty({ description: "Display name" })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  name: string;
+
+  @ApiPropertyOptional({ description: "SKU or internal code" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  sku?: string;
+
+  @ApiPropertyOptional({ description: "Unit e.g. tablet, bottle" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  unit?: string;
+
+  @ApiPropertyOptional({ description: "Barcode or GTIN" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  barcode?: string;
+}
+
+export class DedupeCheckQueryDto {
+  @ApiPropertyOptional({ description: "Name to check for duplicates" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  name?: string;
+
+  @ApiPropertyOptional({ description: "SKU to check for duplicates" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  sku?: string;
+
+  @ApiPropertyOptional({ description: "Barcode or GTIN to check for duplicates" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  barcode?: string;
 }
 
 export class UpdateMedicineDto {

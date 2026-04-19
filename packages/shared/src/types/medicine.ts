@@ -1,9 +1,14 @@
+export type MedicineStatus = "canonical" | "draft";
+
 export interface MedicineDto {
   id: string;
   name: string;
   sku: string | null;
   unit: string | null;
+  barcode: string | null;
   isActive: boolean;
+  status: MedicineStatus;
+  draftBranchId: string | null;
   stockQuantity: number;
   reorderMin: number | null;
   reorderMax: number | null;
@@ -19,7 +24,10 @@ export interface CanonicalMedicineDto {
   name: string;
   sku: string | null;
   unit: string | null;
+  barcode: string | null;
   isActive: boolean;
+  status: MedicineStatus;
+  draftBranchId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +70,28 @@ export interface CreateMedicineInput {
   name: string;
   sku?: string;
   unit?: string;
+  barcode?: string;
+}
+
+export interface CreateDraftMedicineInput {
+  name: string;
+  sku?: string;
+  unit?: string;
+  barcode?: string;
+}
+
+export interface DedupeHintDto {
+  id: string;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  status: MedicineStatus;
+  draftBranchId: string | null;
+  matchedOn: ("name" | "sku" | "barcode")[];
+}
+
+export interface DedupeCheckResponse {
+  hints: DedupeHintDto[];
 }
 
 export interface UpdateMedicineInput {
