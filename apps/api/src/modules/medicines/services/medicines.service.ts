@@ -6,7 +6,13 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Brackets, In, type Repository } from "typeorm";
+import { Brackets, In, QueryFailedError, type Repository } from "typeorm";
+import { InventoryLot } from "../../../entities/inventory-lot.entity";
+import {
+  InventoryMovement,
+  InventoryMovementReferenceType,
+  InventoryMovementType,
+} from "../../../entities/inventory-movement.entity";
 import { MedicineOverlay } from "../../../entities/medicine-overlay.entity";
 import {
   MedicineTransaction,
@@ -14,6 +20,7 @@ import {
 } from "../../../entities/medicine-transaction.entity";
 import { Medicine, MedicineStatus } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
+import { isLotExpired } from "../../inventory/lot-expiry";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
 import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
@@ -66,6 +73,10 @@ export class MedicinesService {
     private readonly overlayRepo: Repository<MedicineOverlay>,
     @InjectRepository(MedicineTransaction)
     private readonly txRepo: Repository<MedicineTransaction>,
+    @InjectRepository(InventoryLot)
+    private readonly lotRepo: Repository<InventoryLot>,
+    @InjectRepository(InventoryMovement)
+    private readonly movementRepo: Repository<InventoryMovement>,
     @InjectRepository(Patient)
     private readonly patientRepo: Repository<Patient>,
   ) {}
@@ -460,6 +471,8 @@ export class MedicinesService {
       const medRepo = manager.getRepository(Medicine);
       const overlayRepo = manager.getRepository(MedicineOverlay);
       const transactionRepo = manager.getRepository(MedicineTransaction);
+      const lotRepo = manager.getRepository(InventoryLot);
+      const movementRepo = manager.getRepository(InventoryMovement);
       const medicine = await medRepo.findOne({
         where: { id: medicineId, tenantId: scope.tenantId },
       });
@@ -472,6 +485,22 @@ export class MedicinesService {
           `Medicine "${medicine.name}" is a draft product owned by another branch`,
         );
       }
+      const lotCode = dto.lotCode.trim();
+      const expiryDate = dto.expiryDate;
+      const unitCost = dto.unitPrice.trim();
+      if (!lotCode) {
+        throw new BadRequestException("Lot code is required");
+      }
+      if (!unitCost) {
+        throw new BadRequestException("Unit cost is required");
+      }
+      const overrideReason = dto.expiryOverrideReason?.trim() || null;
+      if (isLotExpired(expiryDate) && !overrideReason) {
+        throw new BadRequestException(
+          `Lot ${lotCode} is expired. Provide an override reason to receive it.`,
+        );
+      }
+
       let overlay = await overlayRepo.findOne({
         where: { medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
         lock: { mode: "pessimistic_write" },
@@ -490,19 +519,68 @@ export class MedicinesService {
         });
       }
       overlay.stockQuantity += dto.quantity;
-      await overlayRepo.save(overlay);
+      overlay = await saveOverlayWithRetry(overlayRepo, overlay, dto.quantity, {
+        tenantId: scope.tenantId,
+        branchId: scope.branchId,
+        medicineId,
+      });
+
+      let lot = await lotRepo.findOne({
+        where: {
+          tenantId: scope.tenantId,
+          branchId: scope.branchId,
+          medicineId,
+          lotCode,
+          expiryDate,
+          unitCost,
+        },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!lot) {
+        lot = lotRepo.create({
+          tenantId: scope.tenantId,
+          branchId: scope.branchId,
+          medicineId,
+          lotCode,
+          expiryDate,
+          unitCost,
+          quantityOnHand: 0,
+        });
+      }
+      lot.quantityOnHand += dto.quantity;
+      lot = await saveLotWithRetry(lotRepo, lot, dto.quantity, {
+        tenantId: scope.tenantId,
+        branchId: scope.branchId,
+        medicineId,
+        lotCode,
+        expiryDate,
+        unitCost,
+      });
       const row = transactionRepo.create({
         tenantId: scope.tenantId,
         branchId: scope.branchId,
         medicineId,
         type: MedicineTransactionType.BUY,
         quantity: dto.quantity,
-        unitPrice: dto.unitPrice?.trim() || null,
+        unitPrice: unitCost,
         recordedAt: new Date(dto.recordedAt),
         patientId: null,
         notes: dto.notes?.trim() || null,
       });
-      return transactionRepo.save(row);
+      const saved = await transactionRepo.save(row);
+      const movement = movementRepo.create({
+        tenantId: scope.tenantId,
+        branchId: scope.branchId,
+        medicineId,
+        lotId: lot.id,
+        type: InventoryMovementType.RECEIPT,
+        referenceType: InventoryMovementReferenceType.MANUAL_RECEIPT,
+        referenceId: saved.id,
+        quantity: dto.quantity,
+        unitCost,
+      });
+      await movementRepo.save(movement);
+      return saved;
     });
   }
 
@@ -517,6 +595,7 @@ export class MedicinesService {
       const overlayRepo = manager.getRepository(MedicineOverlay);
       const transactionRepo = manager.getRepository(MedicineTransaction);
       const patRepo = manager.getRepository(Patient);
+      const lotRepo = manager.getRepository(InventoryLot);
       const medicine = await medRepo.findOne({
         where: { id: medicineId, tenantId: scope.tenantId },
       });
@@ -556,8 +635,32 @@ export class MedicinesService {
         }
         patientId = dto.patientId;
       }
-      if (overlay.stockQuantity < dto.quantity) {
+      const lots = await lotRepo
+        .createQueryBuilder("lot")
+        .where("lot.tenantId = :tenantId", { tenantId: scope.tenantId })
+        .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
+        .andWhere("lot.medicineId = :medicineId", { medicineId })
+        .andWhere("lot.quantityOnHand > 0")
+        .orderBy("lot.expiryDate", "ASC")
+        .addOrderBy("lot.createdAt", "ASC")
+        .setLock("pessimistic_write")
+        .getMany();
+      const available = lots.reduce((sum, lot) => sum + lot.quantityOnHand, 0);
+      if (lots.length > 0 && available < dto.quantity) {
         throw new ConflictException("Not enough stock");
+      }
+      if (lots.length === 0 && overlay.stockQuantity < dto.quantity) {
+        throw new ConflictException("Not enough stock");
+      }
+      if (lots.length > 0) {
+        let remaining = dto.quantity;
+        for (const lot of lots) {
+          if (remaining <= 0) break;
+          const take = Math.min(remaining, lot.quantityOnHand);
+          lot.quantityOnHand -= take;
+          remaining -= take;
+          await lotRepo.save(lot);
+        }
       }
       overlay.stockQuantity -= dto.quantity;
       await overlayRepo.save(overlay);
@@ -595,3 +698,57 @@ export class MedicinesService {
     return { items, total };
   }
 }
+
+const saveOverlayWithRetry = async (
+  repo: Repository<MedicineOverlay>,
+  entity: MedicineOverlay,
+  delta: number,
+  lookup: { tenantId: string; branchId: string; medicineId: string },
+): Promise<MedicineOverlay> => {
+  try {
+    return await repo.save(entity);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      const existing = await repo.findOne({
+        where: lookup,
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!existing) throw error;
+      existing.stockQuantity += delta;
+      return repo.save(existing);
+    }
+    throw error;
+  }
+};
+
+const saveLotWithRetry = async (
+  repo: Repository<InventoryLot>,
+  entity: InventoryLot,
+  delta: number,
+  lookup: {
+    tenantId: string;
+    branchId: string;
+    medicineId: string;
+    lotCode: string;
+    expiryDate: string;
+    unitCost: string;
+  },
+): Promise<InventoryLot> => {
+  try {
+    return await repo.save(entity);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      const existing = await repo.findOne({
+        where: lookup,
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!existing) throw error;
+      existing.quantityOnHand += delta;
+      return repo.save(existing);
+    }
+    throw error;
+  }
+};
+
+const isUniqueViolation = (error: unknown) =>
+  error instanceof QueryFailedError && (error as { code?: string }).code === "23505";

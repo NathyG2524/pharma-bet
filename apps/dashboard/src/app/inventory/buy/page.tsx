@@ -27,6 +27,9 @@ export default function BuyStockPage() {
   const [medicineId, setMedicineId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState("");
+  const [lotCode, setLotCode] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [expiryOverrideReason, setExpiryOverrideReason] = useState("");
   const [recordedAt, setRecordedAt] = useState(() => toLocalDatetimeValue(new Date()));
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -64,6 +67,23 @@ export default function BuyStockPage() {
     setError(null);
     setSuccess(null);
     if (!medicineId || quantity < 1) return;
+    if (!unitPrice.trim()) {
+      setError("Unit cost is required.");
+      return;
+    }
+    if (!lotCode.trim()) {
+      setError("Lot code is required.");
+      return;
+    }
+    if (!expiryDate.trim()) {
+      setError("Expiry date is required.");
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (expiryDate < today && !expiryOverrideReason.trim()) {
+      setError("Expired lots require an override reason.");
+      return;
+    }
     setLoading(true);
     try {
       const iso = parseLocalDateTime(recordedAt);
@@ -75,12 +95,18 @@ export default function BuyStockPage() {
       await medicinesApi.buyMedicine(medicineId, {
         quantity,
         recordedAt: iso,
-        unitPrice: unitPrice.trim() || undefined,
+        unitPrice: unitPrice.trim(),
+        lotCode: lotCode.trim(),
+        expiryDate,
+        expiryOverrideReason: expiryOverrideReason.trim() || undefined,
         notes: notes.trim() || undefined,
       });
       setSuccess("Purchase recorded.");
       setNotes("");
       setUnitPrice("");
+      setLotCode("");
+      setExpiryDate("");
+      setExpiryOverrideReason("");
       await loadMedicines();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
@@ -161,7 +187,7 @@ export default function BuyStockPage() {
             </div>
             <div>
               <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Unit price (optional)
+                Unit cost
               </label>
               <Input
                 id="price"
@@ -169,6 +195,43 @@ export default function BuyStockPage() {
                 placeholder="e.g. 12.50"
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label htmlFor="lot" className="mb-1.5 block text-sm font-medium text-gray-700">
+                Lot code
+              </label>
+              <Input
+                id="lot"
+                value={lotCode}
+                onChange={(e) => setLotCode(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label htmlFor="expiry" className="mb-1.5 block text-sm font-medium text-gray-700">
+                Expiry date
+              </label>
+              <Input
+                id="expiry"
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="expiry-reason"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Expired lot override reason (if needed)
+              </label>
+              <Textarea
+                id="expiry-reason"
+                value={expiryOverrideReason}
+                onChange={(e) => setExpiryOverrideReason(e.target.value)}
                 disabled={loading}
               />
             </div>

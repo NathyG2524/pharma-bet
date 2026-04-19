@@ -111,7 +111,10 @@ export interface UpdateMedicineOverlayInput {
 
 export interface BuyMedicineInput {
   quantity: number;
-  unitPrice?: string;
+  unitPrice: string;
+  lotCode: string;
+  expiryDate: string;
+  expiryOverrideReason?: string;
   recordedAt: string;
   notes?: string;
 }

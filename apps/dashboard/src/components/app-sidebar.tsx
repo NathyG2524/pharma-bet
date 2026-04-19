@@ -36,6 +36,7 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory/drafts", label: "Draft medicines", icon: ClipboardList },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
+  { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
 ];
 
 const branchInventoryLinks: NavItem[] = [
@@ -43,6 +44,11 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/inventory/new-draft", label: "Add draft medicine", icon: PackagePlus },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
+  { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
+];
+
+const purchasingLinks: NavItem[] = [
+  { href: "/purchasing", label: "Purchase orders", icon: ClipboardList },
 ];
 
 const orgLinks: NavItem[] = [{ href: "/organization", label: "Branches & access", icon: Users }];
@@ -126,6 +132,17 @@ export function AppSidebar() {
           </p>
           <div className="space-y-1">
             {visibleInventoryLinks.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant mb-2">
+            Purchasing
+          </p>
+          <div className="space-y-1">
+            {purchasingLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>
