@@ -1,14 +1,10 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { TaxCategory } from "../../../entities/tax-category.entity";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { CreateTaxCategoryDto } from "../dto/create-tax-category.dto";
+import { normalizeTaxRate } from "../tax-rate";
 
 @Injectable()
 export class TaxCategoriesService {
@@ -22,17 +18,6 @@ export class TaxCategoriesService {
       throw new NotFoundException("Tenant context required");
     }
     return { tenantId: context.tenantId };
-  }
-
-  private normalizeRate(rate: string): string {
-    const parsed = Number.parseFloat(rate);
-    if (!Number.isFinite(parsed)) {
-      throw new BadRequestException("Tax rate must be a valid number");
-    }
-    if (parsed < 0 || parsed > 1) {
-      throw new BadRequestException("Tax rate must be between 0 and 1");
-    }
-    return parsed.toFixed(4);
   }
 
   async list(context: AuthContext): Promise<TaxCategory[]> {
@@ -55,7 +40,7 @@ export class TaxCategoriesService {
     const category = this.taxCategoryRepo.create({
       tenantId: scope.tenantId,
       name,
-      rate: this.normalizeRate(dto.rate),
+      rate: normalizeTaxRate(dto.rate),
     });
     return this.taxCategoryRepo.save(category);
   }
