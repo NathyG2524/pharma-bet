@@ -38,7 +38,7 @@ export class UpdateSupplierDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  name?: string | null;
+  name?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

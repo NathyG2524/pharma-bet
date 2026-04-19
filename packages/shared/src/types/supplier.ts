@@ -45,7 +45,7 @@ export interface CreateSupplierInput {
 }
 
 export interface UpdateSupplierInput {
-  name?: string | null;
+  name?: string;
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
