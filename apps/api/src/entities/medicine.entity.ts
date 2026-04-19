@@ -3,12 +3,15 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { MedicineOverlay } from "./medicine-overlay.entity";
 import { MedicineTransaction } from "./medicine-transaction.entity";
+import { TaxCategory } from "./tax-category.entity";
 
 export enum MedicineStatus {
   CANONICAL = "canonical",
@@ -49,6 +52,13 @@ export class Medicine {
 
   @Column({ type: "uuid", nullable: true })
   draftBranchId: string | null;
+
+  @Column({ type: "uuid", nullable: true })
+  taxCategoryId: string | null;
+
+  @ManyToOne(() => TaxCategory, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "taxCategoryId" })
+  taxCategory: TaxCategory | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;

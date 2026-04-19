@@ -31,7 +31,14 @@ export type {
   TenantDto,
   UserRole,
 } from "./types/tenancy";
+export type {
+  BranchTaxSettingsDto,
+  CreateTaxCategoryInput,
+  TaxCategoryDto,
+  UpdateBranchTaxSettingsInput,
+} from "./types/tax";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
+export { TaxesApi, taxesApi } from "./lib/taxesApi";
