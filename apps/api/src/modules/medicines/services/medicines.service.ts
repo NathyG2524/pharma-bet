@@ -320,27 +320,26 @@ export class MedicinesService {
     if (!name?.trim() && !sku?.trim() && !barcode?.trim()) {
       return { hints: [] };
     }
+
+    type MatchField = { column: string; paramKey: string; value: string };
+    const matchFields: MatchField[] = [
+      ...(name?.trim()
+        ? [{ column: "m.name ILIKE :name", paramKey: "name", value: `%${name.trim()}%` }]
+        : []),
+      ...(sku?.trim() ? [{ column: "m.sku = :sku", paramKey: "sku", value: sku.trim() }] : []),
+      ...(barcode?.trim()
+        ? [{ column: "m.barcode = :barcode", paramKey: "barcode", value: barcode.trim() }]
+        : []),
+    ];
+
     const qb = this.medicineRepo.createQueryBuilder("m");
     qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
     qb.andWhere(
       new Brackets((qb2) => {
-        let added = false;
-        if (name?.trim()) {
-          qb2.where("m.name ILIKE :name", { name: `%${name.trim()}%` });
-          added = true;
-        }
-        if (sku?.trim()) {
-          const cond = "m.sku = :sku";
-          if (added) qb2.orWhere(cond, { sku: sku.trim() });
-          else {
-            qb2.where(cond, { sku: sku.trim() });
-            added = true;
-          }
-        }
-        if (barcode?.trim()) {
-          const cond = "m.barcode = :barcode";
-          if (added) qb2.orWhere(cond, { barcode: barcode.trim() });
-          else qb2.where(cond, { barcode: barcode.trim() });
+        for (const [i, field] of matchFields.entries()) {
+          const params = { [field.paramKey]: field.value };
+          if (i === 0) qb2.where(field.column, params);
+          else qb2.orWhere(field.column, params);
         }
       }),
     );

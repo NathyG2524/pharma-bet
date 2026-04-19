@@ -209,7 +209,7 @@ export default function InventoryPage() {
                       href="/inventory/new-draft"
                       className="font-medium text-primary underline hover:text-primary_container"
                     >
-                      add a draft
+                      add a draft medicine
                     </Link>
                     .
                   </td>
