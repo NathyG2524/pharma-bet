@@ -6,7 +6,8 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Brackets, In, type Repository } from "typeorm";
+import { Brackets, type EntityManager, In, type Repository } from "typeorm";
+import { BranchTaxSetting } from "../../../entities/branch-tax-setting.entity";
 import { MedicineOverlay } from "../../../entities/medicine-overlay.entity";
 import {
   MedicineTransaction,
@@ -14,6 +15,8 @@ import {
 } from "../../../entities/medicine-transaction.entity";
 import { Medicine, MedicineStatus } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
+import { TaxCategory } from "../../../entities/tax-category.entity";
+import { computeLineTax } from "../../taxes/tax-calculation";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
 import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
@@ -37,6 +40,7 @@ type MedicineReadModel = {
   isActive: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
+  taxCategoryId: string | null;
   createdAt: Date;
   updatedAt: Date;
   stockQuantity: number;
@@ -68,6 +72,8 @@ export class MedicinesService {
     private readonly txRepo: Repository<MedicineTransaction>,
     @InjectRepository(Patient)
     private readonly patientRepo: Repository<Patient>,
+    @InjectRepository(TaxCategory)
+    private readonly taxCategoryRepo: Repository<TaxCategory>,
   ) {}
 
   private getTenantScope(context: AuthContext) {
@@ -84,6 +90,58 @@ export class MedicinesService {
     return { tenantId: context.tenantId, branchId: context.activeBranchId };
   }
 
+  private async resolveTaxCategoryId(
+    tenantId: string,
+    taxCategoryId?: string | null,
+  ): Promise<string | null | undefined> {
+    if (taxCategoryId === undefined) {
+      return undefined;
+    }
+    if (taxCategoryId === null) {
+      return null;
+    }
+    const category = await this.taxCategoryRepo.findOne({
+      where: { id: taxCategoryId, tenantId },
+    });
+    if (!category) {
+      throw new BadRequestException("Tax category not found for tenant");
+    }
+    return category.id;
+  }
+
+  private async resolveTaxRate(
+    manager: EntityManager,
+    scope: { tenantId: string; branchId: string },
+    medicine: Medicine,
+  ): Promise<string | null> {
+    const settingsRepo = manager.getRepository(BranchTaxSetting);
+    const categoryRepo = manager.getRepository(TaxCategory);
+    const settings = await settingsRepo.findOne({
+      where: { tenantId: scope.tenantId, branchId: scope.branchId },
+    });
+    const defaultCategoryId = settings?.defaultTaxCategoryId ?? null;
+    const categoryId = medicine.taxCategoryId ?? defaultCategoryId;
+    let rate = settings?.taxRateOverride ?? null;
+    if (rate == null && categoryId) {
+      const category = await categoryRepo.findOne({
+        where: { id: categoryId, tenantId: scope.tenantId },
+      });
+      rate = category?.rate ?? null;
+    }
+    return rate;
+  }
+
+  private async buildLineTax(
+    manager: EntityManager,
+    scope: { tenantId: string; branchId: string },
+    medicine: Medicine,
+    quantity: number,
+    unitPrice: string | null,
+  ): Promise<{ taxBase: string | null; taxRate: string | null; taxAmount: string | null }> {
+    const rate = await this.resolveTaxRate(manager, scope, medicine);
+    return computeLineTax({ quantity, unitPrice, taxRate: rate });
+  }
+
   private buildReadModel(medicine: Medicine, overlay?: MedicineOverlay | null): MedicineReadModel {
     return {
       id: medicine.id,
@@ -94,6 +152,7 @@ export class MedicinesService {
       isActive: medicine.isActive,
       status: medicine.status,
       draftBranchId: medicine.draftBranchId,
+      taxCategoryId: medicine.taxCategoryId,
       createdAt: medicine.createdAt,
       updatedAt: medicine.updatedAt,
       stockQuantity: overlay?.stockQuantity ?? 0,
@@ -252,6 +311,7 @@ export class MedicinesService {
     if (exists) {
       throw new ConflictException("A medicine with this name already exists");
     }
+    const taxCategoryId = await this.resolveTaxCategoryId(scope.tenantId, dto.taxCategoryId);
     const medicine = this.medicineRepo.create({
       tenantId: scope.tenantId,
       name,
@@ -261,6 +321,7 @@ export class MedicinesService {
       isActive: true,
       status: MedicineStatus.CANONICAL,
       draftBranchId: null,
+      taxCategoryId: taxCategoryId ?? null,
     });
     return this.medicineRepo.save(medicine);
   }
@@ -276,6 +337,7 @@ export class MedicinesService {
         "A medicine with this name already exists (canonical or draft). Use a unique name.",
       );
     }
+    const taxCategoryId = await this.resolveTaxCategoryId(scope.tenantId, dto.taxCategoryId);
     const medicine = this.medicineRepo.create({
       tenantId: scope.tenantId,
       name,
@@ -285,6 +347,7 @@ export class MedicinesService {
       isActive: true,
       status: MedicineStatus.DRAFT,
       draftBranchId: scope.branchId,
+      taxCategoryId: taxCategoryId ?? null,
     });
     return this.medicineRepo.save(medicine);
   }
@@ -404,6 +467,10 @@ export class MedicinesService {
     if (dto.isActive !== undefined) {
       medicine.isActive = dto.isActive;
     }
+    if (dto.taxCategoryId !== undefined) {
+      const taxCategoryId = await this.resolveTaxCategoryId(scope.tenantId, dto.taxCategoryId);
+      medicine.taxCategoryId = taxCategoryId ?? null;
+    }
     return this.medicineRepo.save(medicine);
   }
 
@@ -491,13 +558,18 @@ export class MedicinesService {
       }
       overlay.stockQuantity += dto.quantity;
       await overlayRepo.save(overlay);
+      const unitPrice = dto.unitPrice?.trim() || null;
+      const taxLine = await this.buildLineTax(manager, scope, medicine, dto.quantity, unitPrice);
       const row = transactionRepo.create({
         tenantId: scope.tenantId,
         branchId: scope.branchId,
         medicineId,
         type: MedicineTransactionType.BUY,
         quantity: dto.quantity,
-        unitPrice: dto.unitPrice?.trim() || null,
+        unitPrice,
+        taxBase: taxLine.taxBase,
+        taxRate: taxLine.taxRate,
+        taxAmount: taxLine.taxAmount,
         recordedAt: new Date(dto.recordedAt),
         patientId: null,
         notes: dto.notes?.trim() || null,
@@ -561,13 +633,18 @@ export class MedicinesService {
       }
       overlay.stockQuantity -= dto.quantity;
       await overlayRepo.save(overlay);
+      const unitPrice = dto.unitPrice?.trim() || null;
+      const taxLine = await this.buildLineTax(manager, scope, medicine, dto.quantity, unitPrice);
       const row = transactionRepo.create({
         tenantId: scope.tenantId,
         branchId: scope.branchId,
         medicineId,
         type: MedicineTransactionType.SELL,
         quantity: dto.quantity,
-        unitPrice: dto.unitPrice?.trim() || null,
+        unitPrice,
+        taxBase: taxLine.taxBase,
+        taxRate: taxLine.taxRate,
+        taxAmount: taxLine.taxAmount,
         recordedAt: new Date(dto.recordedAt),
         patientId,
         notes: dto.notes?.trim() || null,

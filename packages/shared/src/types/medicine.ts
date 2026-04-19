@@ -9,6 +9,7 @@ export interface MedicineDto {
   isActive: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
+  taxCategoryId: string | null;
   stockQuantity: number;
   reorderMin: number | null;
   reorderMax: number | null;
@@ -28,6 +29,7 @@ export interface CanonicalMedicineDto {
   isActive: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
+  taxCategoryId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +46,9 @@ export interface MedicineTransactionDto {
   type: "BUY" | "SELL";
   quantity: number;
   unitPrice: string | null;
+  taxBase: string | null;
+  taxRate: string | null;
+  taxAmount: string | null;
   recordedAt: string;
   patientId: string | null;
   notes: string | null;
@@ -71,6 +76,7 @@ export interface CreateMedicineInput {
   sku?: string;
   unit?: string;
   barcode?: string;
+  taxCategoryId?: string;
 }
 
 export interface CreateDraftMedicineInput {
@@ -78,6 +84,7 @@ export interface CreateDraftMedicineInput {
   sku?: string;
   unit?: string;
   barcode?: string;
+  taxCategoryId?: string;
 }
 
 export interface DedupeHintDto {
@@ -99,6 +106,7 @@ export interface UpdateMedicineInput {
   sku?: string | null;
   unit?: string | null;
   isActive?: boolean;
+  taxCategoryId?: string | null;
 }
 
 export interface UpdateMedicineOverlayInput {
