@@ -11,6 +11,7 @@ import {
   Search,
   ShoppingCart,
   Stethoscope,
+  Truck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -34,6 +35,7 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory", label: "Medicines", icon: Pill },
   { href: "/inventory/new", label: "Add medicine", icon: PackagePlus },
   { href: "/inventory/drafts", label: "Draft medicines", icon: ClipboardList },
+  { href: "/inventory/suppliers", label: "Suppliers", icon: Truck },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
