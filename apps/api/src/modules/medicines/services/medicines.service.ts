@@ -335,11 +335,6 @@ export class MedicinesService {
         : []),
     ];
 
-    // Guard: matchFields is guaranteed non-empty by the early return above, but checked for safety
-    if (matchFields.length === 0) {
-      return { hints: [] };
-    }
-
     const qb = this.medicineRepo.createQueryBuilder("m");
     qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
     qb.andWhere(
