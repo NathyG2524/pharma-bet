@@ -1,23 +1,26 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, type Repository } from "typeorm";
+import { Brackets, In, type Repository } from "typeorm";
 import { MedicineOverlay } from "../../../entities/medicine-overlay.entity";
 import {
   MedicineTransaction,
   MedicineTransactionType,
 } from "../../../entities/medicine-transaction.entity";
-import { Medicine } from "../../../entities/medicine.entity";
+import { Medicine, MedicineStatus } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
 import type { AuthContext } from "../../tenancy/auth-context";
 import type { BuyMedicineDto } from "../dto/medicine-transaction.dto";
 import type { SellMedicineDto } from "../dto/medicine-transaction.dto";
 import type {
+  CreateDraftMedicineDto,
   CreateMedicineDto,
+  DedupeCheckQueryDto,
   UpdateMedicineDto,
   UpdateMedicineOverlayDto,
 } from "../dto/medicine.dto";
@@ -30,7 +33,10 @@ type MedicineReadModel = {
   name: string;
   sku: string | null;
   unit: string | null;
+  barcode: string | null;
   isActive: boolean;
+  status: MedicineStatus;
+  draftBranchId: string | null;
   createdAt: Date;
   updatedAt: Date;
   stockQuantity: number;
@@ -39,6 +45,16 @@ type MedicineReadModel = {
   binLocation: string | null;
   localPrice: string | null;
   localCost: string | null;
+};
+
+export type DedupeHint = {
+  id: string;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  status: MedicineStatus;
+  draftBranchId: string | null;
+  matchedOn: ("name" | "sku" | "barcode")[];
 };
 
 @Injectable()
@@ -74,7 +90,10 @@ export class MedicinesService {
       name: medicine.name,
       sku: medicine.sku,
       unit: medicine.unit,
+      barcode: medicine.barcode,
       isActive: medicine.isActive,
+      status: medicine.status,
+      draftBranchId: medicine.draftBranchId,
       createdAt: medicine.createdAt,
       updatedAt: medicine.updatedAt,
       stockQuantity: overlay?.stockQuantity ?? 0,
@@ -89,9 +108,28 @@ export class MedicinesService {
   private async findCanonical(context: AuthContext, id: string): Promise<Medicine> {
     const scope = this.getTenantScope(context);
     const medicine = await this.medicineRepo.findOne({
+      where: { id, tenantId: scope.tenantId, status: MedicineStatus.CANONICAL },
+    });
+    if (!medicine) {
+      throw new NotFoundException(`Medicine ${id} not found`);
+    }
+    return medicine;
+  }
+
+  /** Find a medicine by id scoped to tenant; includes drafts owned by this branch. */
+  private async findMedicineForBranch(
+    context: AuthContext,
+    id: string,
+    branchId: string,
+  ): Promise<Medicine> {
+    const scope = this.getTenantScope(context);
+    const medicine = await this.medicineRepo.findOne({
       where: { id, tenantId: scope.tenantId },
     });
     if (!medicine) {
+      throw new NotFoundException(`Medicine ${id} not found`);
+    }
+    if (medicine.status === MedicineStatus.DRAFT && medicine.draftBranchId !== branchId) {
       throw new NotFoundException(`Medicine ${id} not found`);
     }
     return medicine;
@@ -111,6 +149,17 @@ export class MedicinesService {
     const scope = this.getBranchScope(context);
     const qb = this.medicineRepo.createQueryBuilder("m");
     qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
+    // Branch sees canonical products + its own drafts
+    qb.andWhere(
+      new Brackets((qb2) => {
+        qb2
+          .where("m.status = :canonical", { canonical: MedicineStatus.CANONICAL })
+          .orWhere("(m.status = :draft AND m.draftBranchId = :branchId)", {
+            draft: MedicineStatus.DRAFT,
+            branchId: scope.branchId,
+          });
+      }),
+    );
     if (!options.includeInactive) {
       qb.andWhere("m.isActive = :active", { active: true });
     }
@@ -147,6 +196,7 @@ export class MedicinesService {
     const scope = this.getTenantScope(context);
     const qb = this.medicineRepo.createQueryBuilder("m");
     qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
+    qb.andWhere("m.status = :status", { status: MedicineStatus.CANONICAL });
     if (!options.includeInactive) {
       qb.andWhere("m.isActive = :active", { active: true });
     }
@@ -160,9 +210,29 @@ export class MedicinesService {
     return { items, total };
   }
 
+  async listDrafts(
+    context: AuthContext,
+    options: { search?: string; limit?: number; offset?: number },
+  ): Promise<{ items: Medicine[]; total: number }> {
+    const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
+    const offset = Math.max(0, options.offset ?? 0);
+    const scope = this.getTenantScope(context);
+    const qb = this.medicineRepo.createQueryBuilder("m");
+    qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
+    qb.andWhere("m.status = :status", { status: MedicineStatus.DRAFT });
+    if (options.search?.trim()) {
+      qb.andWhere("m.name ILIKE :search", {
+        search: `%${options.search.trim()}%`,
+      });
+    }
+    qb.orderBy("m.name", "ASC").skip(offset).take(limit);
+    const [items, total] = await qb.getManyAndCount();
+    return { items, total };
+  }
+
   async findOne(context: AuthContext, id: string): Promise<MedicineReadModel> {
     const scope = this.getBranchScope(context);
-    const medicine = await this.findCanonical(context, id);
+    const medicine = await this.findMedicineForBranch(context, id, scope.branchId);
     const overlay = await this.overlayRepo.findOne({
       where: { medicineId: id, tenantId: scope.tenantId, branchId: scope.branchId },
     });
@@ -187,9 +257,127 @@ export class MedicinesService {
       name,
       sku: dto.sku?.trim() || null,
       unit: dto.unit?.trim() || null,
+      barcode: dto.barcode?.trim() || null,
       isActive: true,
+      status: MedicineStatus.CANONICAL,
+      draftBranchId: null,
     });
     return this.medicineRepo.save(medicine);
+  }
+
+  async createDraft(context: AuthContext, dto: CreateDraftMedicineDto): Promise<Medicine> {
+    const name = dto.name.trim();
+    const scope = this.getBranchScope(context);
+    const exists = await this.medicineRepo.exists({
+      where: { name, tenantId: scope.tenantId },
+    });
+    if (exists) {
+      throw new ConflictException(
+        "A medicine with this name already exists (canonical or draft). Use a unique name.",
+      );
+    }
+    const medicine = this.medicineRepo.create({
+      tenantId: scope.tenantId,
+      name,
+      sku: dto.sku?.trim() || null,
+      unit: dto.unit?.trim() || null,
+      barcode: dto.barcode?.trim() || null,
+      isActive: true,
+      status: MedicineStatus.DRAFT,
+      draftBranchId: scope.branchId,
+    });
+    return this.medicineRepo.save(medicine);
+  }
+
+  async promoteDraft(context: AuthContext, id: string): Promise<Medicine> {
+    const scope = this.getTenantScope(context);
+    const draft = await this.medicineRepo.findOne({
+      where: { id, tenantId: scope.tenantId, status: MedicineStatus.DRAFT },
+    });
+    if (!draft) {
+      throw new NotFoundException(`Draft medicine ${id} not found`);
+    }
+    // Check there's no canonical product with the same name
+    const conflict = await this.medicineRepo.findOne({
+      where: { name: draft.name, tenantId: scope.tenantId, status: MedicineStatus.CANONICAL },
+    });
+    if (conflict) {
+      throw new ConflictException(
+        `A canonical medicine named "${draft.name}" already exists (id: ${conflict.id}). Resolve the conflict before promoting.`,
+      );
+    }
+    draft.status = MedicineStatus.CANONICAL;
+    draft.draftBranchId = null;
+    return this.medicineRepo.save(draft);
+  }
+
+  async dedupeCheck(
+    context: AuthContext,
+    query: DedupeCheckQueryDto,
+  ): Promise<{ hints: DedupeHint[] }> {
+    const scope = this.getTenantScope(context);
+    const { name, sku, barcode } = query;
+    if (!name?.trim() && !sku?.trim() && !barcode?.trim()) {
+      return { hints: [] };
+    }
+    const qb = this.medicineRepo.createQueryBuilder("m");
+    qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
+    qb.andWhere(
+      new Brackets((qb2) => {
+        let added = false;
+        if (name?.trim()) {
+          qb2.where("m.name ILIKE :name", { name: `%${name.trim()}%` });
+          added = true;
+        }
+        if (sku?.trim()) {
+          const cond = "m.sku = :sku";
+          if (added) qb2.orWhere(cond, { sku: sku.trim() });
+          else {
+            qb2.where(cond, { sku: sku.trim() });
+            added = true;
+          }
+        }
+        if (barcode?.trim()) {
+          const cond = "m.barcode = :barcode";
+          if (added) qb2.orWhere(cond, { barcode: barcode.trim() });
+          else qb2.where(cond, { barcode: barcode.trim() });
+        }
+      }),
+    );
+    qb.take(20);
+    const matches = await qb.getMany();
+
+    const hints: DedupeHint[] = matches.map((m) => {
+      const matchedOn: ("name" | "sku" | "barcode")[] = [];
+      if (name?.trim() && m.name.toLowerCase().includes(name.trim().toLowerCase())) {
+        matchedOn.push("name");
+      }
+      if (sku?.trim() && m.sku === sku.trim()) {
+        matchedOn.push("sku");
+      }
+      if (barcode?.trim() && m.barcode === barcode.trim()) {
+        matchedOn.push("barcode");
+      }
+      return {
+        id: m.id,
+        name: m.name,
+        sku: m.sku,
+        barcode: m.barcode,
+        status: m.status,
+        draftBranchId: m.draftBranchId,
+        matchedOn,
+      };
+    });
+    return { hints };
+  }
+
+  /** Validates that a medicine is not a draft (for use by HQ PO services). */
+  assertNotDraft(medicine: Medicine): void {
+    if (medicine.status === MedicineStatus.DRAFT) {
+      throw new BadRequestException(
+        `Medicine "${medicine.name}" is a draft product and cannot be referenced on an HQ purchase order. Promote it to canonical first.`,
+      );
+    }
   }
 
   async update(context: AuthContext, id: string, dto: UpdateMedicineDto): Promise<Medicine> {
@@ -223,7 +411,7 @@ export class MedicinesService {
     dto: UpdateMedicineOverlayDto,
   ): Promise<MedicineReadModel> {
     const scope = this.getBranchScope(context);
-    const medicine = await this.findCanonical(context, id);
+    const medicine = await this.findMedicineForBranch(context, id, scope.branchId);
     const overlay =
       (await this.overlayRepo.findOne({
         where: { tenantId: scope.tenantId, branchId: scope.branchId, medicineId: id },
@@ -276,6 +464,12 @@ export class MedicinesService {
       if (!medicine) {
         throw new NotFoundException(`Medicine ${medicineId} not found`);
       }
+      // Draft medicines can only be used by the branch that owns them
+      if (medicine.status === MedicineStatus.DRAFT && medicine.draftBranchId !== scope.branchId) {
+        throw new ForbiddenException(
+          `Medicine "${medicine.name}" is a draft product owned by another branch`,
+        );
+      }
       let overlay = await overlayRepo.findOne({
         where: { medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
         lock: { mode: "pessimistic_write" },
@@ -326,6 +520,12 @@ export class MedicinesService {
       });
       if (!medicine) {
         throw new NotFoundException(`Medicine ${medicineId} not found`);
+      }
+      // Draft medicines can only be used by the branch that owns them
+      if (medicine.status === MedicineStatus.DRAFT && medicine.draftBranchId !== scope.branchId) {
+        throw new ForbiddenException(
+          `Medicine "${medicine.name}" is a draft product owned by another branch`,
+        );
       }
       let overlay = await overlayRepo.findOne({
         where: { medicineId, tenantId: scope.tenantId, branchId: scope.branchId },
@@ -380,7 +580,7 @@ export class MedicinesService {
     options: { limit?: number; offset?: number },
   ): Promise<{ items: MedicineTransaction[]; total: number }> {
     const scope = this.getBranchScope(context);
-    await this.findCanonical(context, medicineId);
+    await this.findMedicineForBranch(context, medicineId, scope.branchId);
     const limit = Math.min(Math.max(1, options.limit ?? DEFAULT_LIMIT), MAX_LIMIT);
     const offset = Math.max(0, options.offset ?? 0);
     const [items, total] = await this.txRepo.findAndCount({

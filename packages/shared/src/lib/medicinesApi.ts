@@ -2,7 +2,9 @@ import type {
   BuyMedicineInput,
   CanonicalMedicineDto,
   CanonicalMedicineListResponse,
+  CreateDraftMedicineInput,
   CreateMedicineInput,
+  DedupeCheckResponse,
   MedicineDto,
   MedicineListResponse,
   MedicineTransactionsResponse,
@@ -104,6 +106,41 @@ export class MedicinesApi {
       method: "PATCH",
       body: JSON.stringify(dto),
     });
+  }
+
+  async listDraftMedicines(params?: {
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<CanonicalMedicineListResponse> {
+    const q = buildQuery({
+      search: params?.search,
+      limit: params?.limit,
+      offset: params?.offset,
+    });
+    return this.request<CanonicalMedicineListResponse>(`/api/medicines/catalog/drafts${q}`);
+  }
+
+  async promoteDraftMedicine(id: string): Promise<CanonicalMedicineDto> {
+    return this.request<CanonicalMedicineDto>(`/api/medicines/catalog/draft/${id}/promote`, {
+      method: "POST",
+    });
+  }
+
+  async createDraftMedicine(dto: CreateDraftMedicineInput): Promise<CanonicalMedicineDto> {
+    return this.request<CanonicalMedicineDto>("/api/medicines/draft", {
+      method: "POST",
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async dedupeCheck(params: {
+    name?: string;
+    sku?: string;
+    barcode?: string;
+  }): Promise<DedupeCheckResponse> {
+    const q = buildQuery({ name: params.name, sku: params.sku, barcode: params.barcode });
+    return this.request<DedupeCheckResponse>(`/api/medicines/dedupe-check${q}`);
   }
 
   async updateMedicineOverlay(id: string, dto: UpdateMedicineOverlayInput): Promise<MedicineDto> {
