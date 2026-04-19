@@ -34,9 +34,13 @@ type PurchaseOrderFormProps = {
   disabled?: boolean;
 };
 
+const fallbackId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const createLineId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : fallbackId();
+
 const createLine = (): FormLine => ({
-  id:
-    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`,
+  id: createLineId(),
   medicineId: "",
   quantity: "1",
   unitCost: "",
@@ -59,10 +63,7 @@ export function PurchaseOrderForm({
   const [lines, setLines] = useState<FormLine[]>(
     initialValues?.lines?.length
       ? initialValues.lines.map((line) => ({
-          id:
-            typeof crypto !== "undefined" && "randomUUID" in crypto
-              ? crypto.randomUUID()
-              : `${Date.now()}-${line.medicineId}`,
+          id: createLineId(),
           medicineId: line.medicineId,
           quantity: String(line.quantity),
           unitCost: line.unitCost ?? "",
