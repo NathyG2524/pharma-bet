@@ -207,6 +207,7 @@ export default function InventoryPage() {
                     No medicines yet. Ask HQ to publish a product or{" "}
                     <Link
                       href="/inventory/new-draft"
+                      aria-label="Create a new draft medicine entry"
                       className="font-medium text-primary underline hover:text-primary_container"
                     >
                       add a draft medicine

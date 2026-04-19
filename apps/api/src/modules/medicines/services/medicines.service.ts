@@ -316,21 +316,29 @@ export class MedicinesService {
     query: DedupeCheckQueryDto,
   ): Promise<{ hints: DedupeHint[] }> {
     const scope = this.getTenantScope(context);
-    const { name, sku, barcode } = query;
-    if (!name?.trim() && !sku?.trim() && !barcode?.trim()) {
+    // Trim once to avoid repeated .trim() calls
+    const nameTrimmed = query.name?.trim() ?? "";
+    const skuTrimmed = query.sku?.trim() ?? "";
+    const barcodeTrimmed = query.barcode?.trim() ?? "";
+    if (!nameTrimmed && !skuTrimmed && !barcodeTrimmed) {
       return { hints: [] };
     }
 
     type MatchField = { column: string; paramKey: string; value: string };
     const matchFields: MatchField[] = [
-      ...(name?.trim()
-        ? [{ column: "m.name ILIKE :name", paramKey: "name", value: `%${name.trim()}%` }]
+      ...(nameTrimmed
+        ? [{ column: "m.name ILIKE :name", paramKey: "name", value: `%${nameTrimmed}%` }]
         : []),
-      ...(sku?.trim() ? [{ column: "m.sku = :sku", paramKey: "sku", value: sku.trim() }] : []),
-      ...(barcode?.trim()
-        ? [{ column: "m.barcode = :barcode", paramKey: "barcode", value: barcode.trim() }]
+      ...(skuTrimmed ? [{ column: "m.sku = :sku", paramKey: "sku", value: skuTrimmed }] : []),
+      ...(barcodeTrimmed
+        ? [{ column: "m.barcode = :barcode", paramKey: "barcode", value: barcodeTrimmed }]
         : []),
     ];
+
+    // Guard: matchFields is guaranteed non-empty by the early return above, but checked for safety
+    if (matchFields.length === 0) {
+      return { hints: [] };
+    }
 
     const qb = this.medicineRepo.createQueryBuilder("m");
     qb.andWhere("m.tenantId = :tenantId", { tenantId: scope.tenantId });
@@ -348,13 +356,13 @@ export class MedicinesService {
 
     const hints: DedupeHint[] = matches.map((m) => {
       const matchedOn: ("name" | "sku" | "barcode")[] = [];
-      if (name?.trim() && m.name.toLowerCase().includes(name.trim().toLowerCase())) {
+      if (nameTrimmed && m.name.toLowerCase().includes(nameTrimmed.toLowerCase())) {
         matchedOn.push("name");
       }
-      if (sku?.trim() && m.sku === sku.trim()) {
+      if (skuTrimmed && m.sku === skuTrimmed) {
         matchedOn.push("sku");
       }
-      if (barcode?.trim() && m.barcode === barcode.trim()) {
+      if (barcodeTrimmed && m.barcode === barcodeTrimmed) {
         matchedOn.push("barcode");
       }
       return {
@@ -370,7 +378,7 @@ export class MedicinesService {
     return { hints };
   }
 
-  /** Validates that a medicine is not a draft (for use by HQ PO services). */
+  /** Validates that a medicine is not a draft (for use by HQ Purchase Order services). */
   assertNotDraft(medicine: Medicine): void {
     if (medicine.status === MedicineStatus.DRAFT) {
       throw new BadRequestException(
