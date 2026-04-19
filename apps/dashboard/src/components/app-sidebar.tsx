@@ -4,6 +4,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
 import {
   Activity,
+  ClipboardList,
   LineChart,
   PackagePlus,
   Pill,
@@ -32,6 +33,14 @@ const patientLinks: NavItem[] = [
 const inventoryLinks: NavItem[] = [
   { href: "/inventory", label: "Medicines", icon: Pill },
   { href: "/inventory/new", label: "Add medicine", icon: PackagePlus },
+  { href: "/inventory/drafts", label: "Draft medicines", icon: ClipboardList },
+  { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
+  { href: "/inventory/sell", label: "Sell", icon: LineChart },
+];
+
+const branchInventoryLinks: NavItem[] = [
+  { href: "/inventory", label: "Medicines", icon: Pill },
+  { href: "/inventory/new-draft", label: "Add draft medicine", icon: PackagePlus },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
@@ -74,9 +83,7 @@ export function AppSidebar() {
   const isHqUser = state.roles.some((role) =>
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
-  const visibleInventoryLinks = isHqUser
-    ? inventoryLinks
-    : inventoryLinks.filter((item) => item.href !== "/inventory/new");
+  const visibleInventoryLinks = isHqUser ? inventoryLinks : branchInventoryLinks;
 
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">

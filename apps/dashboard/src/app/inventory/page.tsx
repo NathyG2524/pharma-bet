@@ -22,6 +22,7 @@ export default function InventoryPage() {
   const isHqUser = state.roles.some((role) =>
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
+  const isBranchUser = state.roles.some((role) => ["branch_manager", "branch_user"].includes(role));
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [items, setItems] = useState<MedicineDto[]>([]);
@@ -79,6 +80,20 @@ export default function InventoryPage() {
           {isHqUser && (
             <Link href="/inventory/new">
               <Button type="button">Add medicine</Button>
+            </Link>
+          )}
+          {isHqUser && (
+            <Link href="/inventory/drafts">
+              <Button type="button" variant="outline">
+                View drafts
+              </Button>
+            </Link>
+          )}
+          {isBranchUser && (
+            <Link href="/inventory/new-draft">
+              <Button type="button" variant="outline">
+                Add draft medicine
+              </Button>
             </Link>
           )}
         </div>
@@ -179,14 +194,24 @@ export default function InventoryPage() {
                 <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                   Stock
                 </th>
+                <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                  Type
+                </th>
                 <th className="px-4 py-4" />
               </tr>
             </thead>
             <tbody>
               {items.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-on_surface_variant">
-                    No medicines yet. Ask HQ to publish a product.
+                  <td colSpan={6} className="px-4 py-8 text-center text-on_surface_variant">
+                    No medicines yet. Ask HQ to publish a product or{" "}
+                    <Link
+                      href="/inventory/new-draft"
+                      className="font-medium text-primary underline hover:text-primary_container"
+                    >
+                      add a draft
+                    </Link>
+                    .
                   </td>
                 </tr>
               ) : (
@@ -200,6 +225,13 @@ export default function InventoryPage() {
                         <span>{m.stockQuantity}</span>
                         {m.stockQuantity <= LOW_STOCK && <Badge variant="warning">Low stock</Badge>}
                       </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      {m.status === "draft" ? (
+                        <Badge variant="warning">Draft</Badge>
+                      ) : (
+                        <Badge variant="success">Canonical</Badge>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       <Link

@@ -60,6 +60,9 @@ export default function MedicineDetailPage() {
   const [overlaySaving, setOverlaySaving] = useState(false);
   const [overlayError, setOverlayError] = useState<string | null>(null);
   const [overlaySuccess, setOverlaySuccess] = useState<string | null>(null);
+  const [promoting, setPromoting] = useState(false);
+  const [promoteError, setPromoteError] = useState<string | null>(null);
+  const [promoteSuccess, setPromoteSuccess] = useState<string | null>(null);
 
   const loadMedicine = useCallback(async () => {
     if (!id) return;
@@ -140,6 +143,23 @@ export default function MedicineDetailPage() {
     }
   };
 
+  const handlePromote = async () => {
+    if (!canonical || !isHqUser) return;
+    setPromoteError(null);
+    setPromoteSuccess(null);
+    setPromoting(true);
+    try {
+      const updated = await medicinesApi.promoteDraftMedicine(canonical.id);
+      setCatalogItem(updated);
+      setMedicine(null);
+      setPromoteSuccess(`"${updated.name}" has been promoted to the canonical catalog.`);
+    } catch (err) {
+      setPromoteError(err instanceof Error ? err.message : "Failed to promote");
+    } finally {
+      setPromoting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl">
@@ -158,6 +178,8 @@ export default function MedicineDetailPage() {
       </div>
     );
   }
+
+  const isDraft = canonical.status === "draft";
 
   const handleCatalogSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +248,10 @@ export default function MedicineDetailPage() {
           >
             ← Medicines
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{canonical?.name ?? "Medicine"}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">{canonical?.name ?? "Medicine"}</h1>
+            {isDraft && <Badge variant="warning">Draft</Badge>}
+          </div>
           <p className="mt-1 text-sm text-gray-600">
             SKU: {canonical?.sku ?? "—"} · Unit: {canonical?.unit ?? "—"}
             {isBranchUser && (
@@ -259,6 +284,37 @@ export default function MedicineDetailPage() {
         )}
       </div>
 
+      {isDraft && (
+        <Alert variant="warning" className="mb-6">
+          <strong>Draft product</strong> — this medicine is a branch-local draft and is not yet in
+          the canonical catalog. It cannot be referenced on HQ purchase orders until promoted.
+          {isHqUser && (
+            <div className="mt-3">
+              {promoteError && (
+                <Alert variant="destructive" className="mb-2">
+                  {promoteError}
+                </Alert>
+              )}
+              {promoteSuccess && (
+                <Alert variant="success" className="mb-2">
+                  {promoteSuccess}
+                </Alert>
+              )}
+              {!promoteSuccess && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={promoting}
+                  onClick={() => void handlePromote()}
+                >
+                  {promoting ? "Promoting…" : "Promote to canonical"}
+                </Button>
+              )}
+            </div>
+          )}
+        </Alert>
+      )}
+
       <Card className="mb-6">
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-3">
           <div>
@@ -278,7 +334,7 @@ export default function MedicineDetailPage() {
         </CardContent>
       </Card>
 
-      {isHqUser && canonical && (
+      {isHqUser && canonical && !isDraft && (
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Canonical product</CardTitle>
