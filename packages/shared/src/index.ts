@@ -107,6 +107,32 @@ export type {
   TransferListResponse,
   TransferStatus,
 } from "./types/transfer";
+export { ApprovalsApi, approvalsApi } from "./lib/approvalsApi";
+export type {
+  ApprovalInstanceDto,
+  RecordApprovalDecisionInput,
+  SubmitApprovalInput,
+} from "./types/approval";
+export { AdjustmentsApi, adjustmentsApi } from "./lib/adjustmentsApi";
+export type {
+  AdjustmentListResponse,
+  AdjustmentReasonCode,
+  AdjustmentStatus,
+  CreateAdjustmentInput,
+  InventoryAdjustmentDto,
+  SubmitAdjustmentInput,
+} from "./types/adjustment";
+export { StockCountsApi, stockCountsApi } from "./lib/stockCountsApi";
+export type {
+  CreateStockCountSessionInput,
+  RecordVarianceInput,
+  StockCountReasonCode,
+  StockCountSessionDto,
+  StockCountSessionListResponse,
+  StockCountSessionStatus,
+  StockCountVarianceDto,
+  SubmitSessionInput,
+} from "./types/stock-count";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";

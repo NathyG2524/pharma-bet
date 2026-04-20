@@ -13,11 +13,15 @@ import { Medicine } from "./medicine.entity";
 
 export enum InventoryMovementType {
   RECEIPT = "RECEIPT",
+  ADJUSTMENT = "ADJUSTMENT",
+  STOCK_COUNT_VARIANCE = "STOCK_COUNT_VARIANCE",
 }
 
 export enum InventoryMovementReferenceType {
   PURCHASE_ORDER_RECEIPT = "PURCHASE_ORDER_RECEIPT",
   MANUAL_RECEIPT = "MANUAL_RECEIPT",
+  INVENTORY_ADJUSTMENT = "INVENTORY_ADJUSTMENT",
+  STOCK_COUNT_VARIANCE = "STOCK_COUNT_VARIANCE",
 }
 
 @Entity({ name: "inventory_movements" })
