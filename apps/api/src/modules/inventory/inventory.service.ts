@@ -126,6 +126,7 @@ export class InventoryService {
         nextStatus,
         reason: payload.reason ?? null,
         medicineId: saved.medicineId,
+        medicineName,
         lotCode: saved.lotCode,
       },
     });

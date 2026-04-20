@@ -177,17 +177,23 @@ export default function MedicineDetailPage() {
     }
   };
 
-  const handleLotStatusChange = async (lotId: string, status: InventoryLotStatusType) => {
+  const handleLotStatusChange = async (lot: InventoryLotDto, status: InventoryLotStatusType) => {
     if (!isHqUser) return;
+    if (status === InventoryLotStatus.RECALLED && lot.status !== InventoryLotStatus.RECALLED) {
+      const confirmed = window.confirm(
+        "Recall is permanent and blocks all outbound allocations. Continue?",
+      );
+      if (!confirmed) return;
+    }
     setLotStatusError(null);
-    setLotStatusUpdating((prev) => ({ ...prev, [lotId]: true }));
+    setLotStatusUpdating((prev) => ({ ...prev, [lot.id]: true }));
     try {
-      const updated = await inventoryApi.updateLotStatus(lotId, { status });
+      const updated = await inventoryApi.updateLotStatus(lot.id, { status });
       setLots((prev) => prev.map((lot) => (lot.id === updated.id ? updated : lot)));
     } catch {
       setLotStatusError("Unable to update lot status. Please try again.");
     } finally {
-      setLotStatusUpdating((prev) => ({ ...prev, [lotId]: false }));
+      setLotStatusUpdating((prev) => ({ ...prev, [lot.id]: false }));
     }
   };
 
@@ -712,7 +718,7 @@ export default function MedicineDetailPage() {
                                   value={lot.status}
                                   onChange={(e) =>
                                     handleLotStatusChange(
-                                      lot.id,
+                                      lot,
                                       e.target.value as InventoryLotStatusType,
                                     )
                                   }
