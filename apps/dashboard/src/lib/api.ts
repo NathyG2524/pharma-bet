@@ -2,6 +2,7 @@ import {
   auditEventsApi,
   branchesApi,
   medicinesApi,
+  notificationsApi,
   patientsApi,
   suppliersApi,
   taxesApi,
@@ -21,6 +22,7 @@ if (apiUrl) {
   medicinesApi.configure(options);
   branchesApi.configure(options);
   tenantsApi.configure(options);
+  notificationsApi.configure(options);
   auditEventsApi.configure(options);
   taxesApi.configure(options);
   suppliersApi.configure(options);
@@ -31,6 +33,7 @@ export {
   medicinesApi,
   branchesApi,
   tenantsApi,
+  notificationsApi,
   auditEventsApi,
   taxesApi,
   suppliersApi,

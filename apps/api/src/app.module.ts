@@ -3,6 +3,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { MedicinesModule } from "./modules/medicines/medicines.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PatientsModule } from "./modules/patients/patients.module";
 import { SuppliersModule } from "./modules/suppliers/suppliers.module";
 import { TaxesModule } from "./modules/taxes/taxes.module";
@@ -19,6 +20,7 @@ import { typeOrmConfig } from "./typeorm-config";
     BranchesModule,
     PatientsModule,
     MedicinesModule,
+    NotificationsModule,
     SuppliersModule,
     TaxesModule,
   ],
