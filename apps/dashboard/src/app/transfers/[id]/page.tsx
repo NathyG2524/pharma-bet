@@ -322,7 +322,7 @@ export default function TransferDetailPage() {
               return (
                 <div
                   key={line.id}
-                  className="rounded-lg border border-outline_variant/20 p-4 space-y-4"
+                  className="rounded-lg border border-outline_variant/20 space-y-4 p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -455,7 +455,7 @@ export default function TransferDetailPage() {
               {transfer.lines.map((line) => (
                 <div
                   key={line.id}
-                  className="rounded-lg border border-outline_variant/20 p-4 space-y-3"
+                  className="rounded-lg border border-outline_variant/20 space-y-3 p-4"
                 >
                   <div>
                     <p className="text-sm font-semibold text-on_surface">
