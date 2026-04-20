@@ -1,3 +1,5 @@
+export type InventoryLotStatus = "ACTIVE" | "QUARANTINE" | "RECALLED";
+
 export interface InventoryLotDto {
   id: string;
   medicineId: string;
@@ -5,6 +7,7 @@ export interface InventoryLotDto {
   lotCode: string;
   expiryDate: string;
   unitCost: string;
+  status: InventoryLotStatus;
   quantityOnHand: number;
   isExpired: boolean;
 }
@@ -24,4 +27,9 @@ export interface InventoryValuationLineDto {
 export interface InventoryValuationResponse {
   totalValue: string;
   lines: InventoryValuationLineDto[];
+}
+
+export interface UpdateLotStatusRequest {
+  status: InventoryLotStatus;
+  reason?: string | null;
 }

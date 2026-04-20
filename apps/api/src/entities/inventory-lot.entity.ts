@@ -11,6 +11,12 @@ import {
 import { Branch } from "./branch.entity";
 import { Medicine } from "./medicine.entity";
 
+export enum InventoryLotStatus {
+  ACTIVE = "ACTIVE",
+  QUARANTINE = "QUARANTINE",
+  RECALLED = "RECALLED",
+}
+
 @Entity({ name: "inventory_lots" })
 @Index(
   "UQ_inventory_lots_unique",
@@ -47,6 +53,14 @@ export class InventoryLot {
 
   @Column({ type: "decimal", precision: 14, scale: 4 })
   unitCost: string;
+
+  @Column({
+    type: "enum",
+    enum: InventoryLotStatus,
+    enumName: "inventory_lot_status_enum",
+    default: InventoryLotStatus.ACTIVE,
+  })
+  status: InventoryLotStatus;
 
   @Column({ type: "int", default: 0 })
   quantityOnHand: number;
