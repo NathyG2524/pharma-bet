@@ -706,6 +706,7 @@ export default function MedicineDetailPage() {
                                   )
                                 }
                                 disabled={lotStatusUpdating[lot.id] || lot.status === "RECALLED"}
+                                aria-label={`Change status for lot ${lot.lotCode}`}
                               >
                                 <option value="ACTIVE">Active</option>
                                 <option value="QUARANTINE">Quarantine</option>
