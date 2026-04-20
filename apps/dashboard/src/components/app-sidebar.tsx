@@ -4,13 +4,16 @@ import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
 import {
   Activity,
+  Bell,
   ClipboardList,
   LineChart,
   PackagePlus,
   Pill,
+  ScrollText,
   Search,
   ShoppingCart,
   Stethoscope,
+  Truck,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -23,7 +26,10 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const mainLinks: NavItem[] = [{ href: "/", label: "Overview", icon: Activity }];
+const mainLinks: NavItem[] = [
+  { href: "/", label: "Overview", icon: Activity },
+  { href: "/notifications", label: "Notifications", icon: Bell },
+];
 
 const patientLinks: NavItem[] = [
   { href: "/patients/lookup", label: "Lookup patient", icon: Search },
@@ -34,6 +40,7 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory", label: "Medicines", icon: Pill },
   { href: "/inventory/new", label: "Add medicine", icon: PackagePlus },
   { href: "/inventory/drafts", label: "Draft medicines", icon: ClipboardList },
+  { href: "/inventory/suppliers", label: "Suppliers", icon: Truck },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
   { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
@@ -48,10 +55,18 @@ const branchInventoryLinks: NavItem[] = [
 ];
 
 const purchasingLinks: NavItem[] = [
-  { href: "/purchasing", label: "Purchase orders", icon: ClipboardList },
+  { href: "/purchase-orders", label: "Purchase orders", icon: ClipboardList },
+  { href: "/suppliers", label: "Suppliers", icon: Users },
 ];
 
-const orgLinks: NavItem[] = [{ href: "/organization", label: "Branches & access", icon: Users }];
+const branchPurchasingLinks: NavItem[] = [
+  { href: "/purchase-orders/approvals", label: "PO approvals", icon: ClipboardList },
+];
+
+const orgLinks: NavItem[] = [
+  { href: "/organization", label: "Branches & access", icon: Users },
+  { href: "/audit", label: "Audit log", icon: ScrollText },
+];
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -90,6 +105,7 @@ export function AppSidebar() {
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
   const visibleInventoryLinks = isHqUser ? inventoryLinks : branchInventoryLinks;
+  const visiblePurchasingLinks = isHqUser ? purchasingLinks : branchPurchasingLinks;
 
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">
@@ -142,7 +158,7 @@ export function AppSidebar() {
             Purchasing
           </p>
           <div className="space-y-1">
-            {purchasingLinks.map((item) => (
+            {visiblePurchasingLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>

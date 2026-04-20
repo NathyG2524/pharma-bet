@@ -12,6 +12,7 @@ import { PurchaseOrder } from "./purchase-order.entity";
 
 @Entity({ name: "purchase_order_lines" })
 @Index("IDX_purchase_order_lines_po", ["purchaseOrderId"])
+@Index("IDX_purchase_order_lines_medicine", ["medicineId"])
 export class PurchaseOrderLine {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -30,12 +31,19 @@ export class PurchaseOrderLine {
   @Column({ type: "uuid" })
   medicineId: string;
 
-  @ManyToOne(() => Medicine, { onDelete: "CASCADE" })
+  @ManyToOne(() => Medicine, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "medicineId" })
   medicine: Medicine;
 
   @Column({ type: "int" })
-  orderedQuantity: number;
+  quantity: number;
+
+  get orderedQuantity(): number {
+    return this.quantity;
+  }
+  set orderedQuantity(value: number) {
+    this.quantity = value;
+  }
 
   @Column({ type: "decimal", precision: 14, scale: 4, nullable: true })
   unitCost: string | null;

@@ -22,6 +22,17 @@ Deliver a **multi-tenant pharmacy operations platform** where:
 - **Append-only audit events** cover sensitive actions; **in-app and email** notifications support workflow queues.
 - The system is **online-first** in v1 (no offline sync).
 
+## Tax model v1
+
+- **Tenant tax categories** store a **rate** (decimal) and are assigned to products.
+- **Branch tax settings** provide a **default tax category** and an optional **rate override** for the branch.
+- **Line tax** is computed at creation time:
+  - **Tax base** = quantity × unit price.
+  - **Tax rate** = branch override rate (if set) → else product tax category rate → else null.
+  - **Tax amount** = tax base × tax rate.
+- **Recalculation rules**: line tax is **snapshotted** on creation. Updates to tax categories or branch settings **do not** retroactively change stored line tax. If tax needs to change, create a new line or adjustment.
+- If unit price or tax rate is missing, the corresponding tax fields remain null.
+
 ## User Stories
 
 ### Tenancy, onboarding, and administration

@@ -1,10 +1,23 @@
+import type { PurchaseOrderReceiptDto, ReceivePurchaseOrderInput } from "../types/purchase-order";
 import type {
   CreatePurchaseOrderInput,
+  PurchaseOrderDecisionInput,
   PurchaseOrderDto,
+  PurchaseOrderEventDto,
   PurchaseOrderListResponse,
-  PurchaseOrderReceiptDto,
-  ReceivePurchaseOrderInput,
-} from "../types/purchase-order";
+  PurchaseOrderStatus,
+  UpdatePurchaseOrderInput,
+} from "../types/purchasing";
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>) {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === "") continue;
+    q.set(k, String(v));
+  }
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
 
 export class PurchaseOrdersApi {
   private apiBaseUrl: string | null = null;
@@ -39,12 +52,26 @@ export class PurchaseOrdersApi {
     return res.json();
   }
 
-  async listPurchaseOrders(): Promise<PurchaseOrderListResponse> {
-    return this.request<PurchaseOrderListResponse>("/api/purchase-orders");
+  async listPurchaseOrders(params?: {
+    status?: PurchaseOrderStatus;
+  }): Promise<PurchaseOrderListResponse> {
+    const q = buildQuery({ status: params?.status });
+    return this.request<PurchaseOrderListResponse>(`/api/purchase-orders${q}`);
+  }
+
+  async listPurchaseOrderInbox(params?: {
+    status?: PurchaseOrderStatus;
+  }): Promise<PurchaseOrderListResponse> {
+    const q = buildQuery({ status: params?.status });
+    return this.request<PurchaseOrderListResponse>(`/api/purchase-orders/inbox${q}`);
   }
 
   async getPurchaseOrder(id: string): Promise<PurchaseOrderDto> {
     return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}`);
+  }
+
+  async getPurchaseOrderEvents(id: string): Promise<PurchaseOrderEventDto[]> {
+    return this.request<PurchaseOrderEventDto[]>(`/api/purchase-orders/${id}/events`);
   }
 
   async createPurchaseOrder(dto: CreatePurchaseOrderInput): Promise<PurchaseOrderDto> {
@@ -54,9 +81,42 @@ export class PurchaseOrdersApi {
     });
   }
 
+  async updatePurchaseOrder(id: string, dto: UpdatePurchaseOrderInput): Promise<PurchaseOrderDto> {
+    return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async submitPurchaseOrder(id: string): Promise<PurchaseOrderDto> {
+    return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}/submit`, {
+      method: "POST",
+    });
+  }
+
   async approvePurchaseOrder(id: string): Promise<PurchaseOrderDto> {
     return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}/approve`, {
       method: "POST",
+    });
+  }
+
+  async rejectPurchaseOrder(
+    id: string,
+    dto: PurchaseOrderDecisionInput,
+  ): Promise<PurchaseOrderDto> {
+    return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async requestPurchaseOrderChanges(
+    id: string,
+    dto: PurchaseOrderDecisionInput,
+  ): Promise<PurchaseOrderDto> {
+    return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}/request-changes`, {
+      method: "POST",
+      body: JSON.stringify(dto),
     });
   }
 
