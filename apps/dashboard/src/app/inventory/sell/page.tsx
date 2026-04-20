@@ -370,7 +370,7 @@ export default function SellPage() {
 
             <div className="rounded-lg bg-surface_container_low p-4">
               <p className="mb-2 text-sm font-medium text-on_surface_variant">
-                Patient {requiresPatient ? "(required for selected items)" : "(optional — walk-in)"}
+                Patient {requiresPatient ? "(required for selected items)" : "(optional - walk-in)"}
               </p>
               {patientLabel ? (
                 <div className="flex flex-wrap items-center gap-2">
