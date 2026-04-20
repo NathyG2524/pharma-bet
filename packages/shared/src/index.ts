@@ -83,6 +83,14 @@ export type {
   TaxCategoryDto,
   UpdateBranchTaxSettingsInput,
 } from "./types/tax";
+export type {
+  CreateSaleInput,
+  CreateSaleLineInput,
+  SaleDto,
+  SaleLineAllocationDto,
+  SaleLineAllocationInput,
+  SaleLineDto,
+} from "./types/sales";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
@@ -93,3 +101,4 @@ export { SuppliersApi, suppliersApi } from "./lib/suppliersApi";
 export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
 export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";
+export { SalesApi, salesApi } from "./lib/salesApi";
