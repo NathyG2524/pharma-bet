@@ -1,4 +1,6 @@
 import {
+  adjustmentsApi,
+  approvalsApi,
   auditEventsApi,
   branchesApi,
   inventoryApi,
@@ -7,6 +9,7 @@ import {
   patientsApi,
   purchaseOrdersApi,
   salesApi,
+  stockCountsApi,
   suppliersApi,
   taxesApi,
   tenantsApi,
@@ -34,6 +37,9 @@ if (apiUrl) {
   suppliersApi.configure(options);
   salesApi.configure(options);
   transfersApi.configure(options);
+  adjustmentsApi.configure(options);
+  stockCountsApi.configure(options);
+  approvalsApi.configure(options);
 }
 
 export {
@@ -49,4 +55,7 @@ export {
   suppliersApi,
   salesApi,
   transfersApi,
+  adjustmentsApi,
+  stockCountsApi,
+  approvalsApi,
 };

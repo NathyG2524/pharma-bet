@@ -5,6 +5,7 @@ import { cn } from "@drug-store/ui";
 import {
   Activity,
   Bell,
+  CheckSquare,
   ClipboardList,
   LineChart,
   PackagePlus,
@@ -46,6 +47,8 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
   { href: "/inventory/org-on-hand", label: "Org on-hand", icon: LineChart },
   { href: "/transfers", label: "Transfers", icon: Truck },
+  { href: "/adjustments", label: "Adjustments", icon: ClipboardList },
+  { href: "/stock-counts", label: "Stock counts", icon: CheckSquare },
 ];
 
 const branchInventoryLinks: NavItem[] = [
@@ -55,15 +58,19 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
   { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
   { href: "/transfers", label: "Transfers", icon: Truck },
+  { href: "/adjustments", label: "Adjustments", icon: ClipboardList },
+  { href: "/stock-counts", label: "Stock counts", icon: CheckSquare },
 ];
 
 const purchasingLinks: NavItem[] = [
   { href: "/purchase-orders", label: "Purchase orders", icon: ClipboardList },
   { href: "/suppliers", label: "Suppliers", icon: Users },
+  { href: "/approvals", label: "Approval inbox", icon: CheckSquare },
 ];
 
 const branchPurchasingLinks: NavItem[] = [
   { href: "/purchase-orders/approvals", label: "PO approvals", icon: ClipboardList },
+  { href: "/approvals", label: "Approval inbox", icon: CheckSquare },
 ];
 
 const orgLinks: NavItem[] = [
