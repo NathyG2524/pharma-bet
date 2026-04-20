@@ -133,6 +133,14 @@ Deliver a **multi-tenant pharmacy operations platform** where:
 55. As an **HQ user**, I want **stock valuation by branch**, so that **financial oversight** is possible.
 56. As a **branch manager**, I want **exception reports** (overrides, break-glass, quarantine blocks), so that **risk** is visible.
 
+Reporting API baseline uses:
+- `GET /api/inventory/reports/expiry-horizon`
+- `GET /api/inventory/reports/stock-valuation`
+- `GET /api/inventory/reports/exceptions`
+
+Filters: `branchId`, `startDate`, `endDate` (ISO).  
+Performance guardrails: max date window is **365 days** and exceptions report returns at most **500 rows**.
+
 ### Platform operations
 
 57. As an **operator**, I want **online-first** semantics with **clear failure modes** when offline, so that users **do not assume** transactions succeeded when they did not.
