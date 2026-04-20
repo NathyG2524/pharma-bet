@@ -36,8 +36,33 @@ export type {
   NotificationDispatchResult,
   NotificationDto,
 } from "./types/notification";
+export type {
+  CreateSupplierInput,
+  CreateSupplierProductInput,
+  SupplierDto,
+  SupplierListResponse,
+  SupplierProductDto,
+  SupplierProductListResponse,
+  UpdateSupplierInput,
+  UpdateSupplierProductInput,
+} from "./types/supplier";
+export type {
+  AuditEventDto,
+  AuditEventListResponse,
+  AuditEventMetadata,
+  ListAuditEventsInput,
+} from "./types/audit";
+export type {
+  BranchTaxSettingsDto,
+  CreateTaxCategoryInput,
+  TaxCategoryDto,
+  UpdateBranchTaxSettingsInput,
+} from "./types/tax";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
 export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
+export { SuppliersApi, suppliersApi } from "./lib/suppliersApi";
+export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
+export { TaxesApi, taxesApi } from "./lib/taxesApi";

@@ -56,6 +56,15 @@ export class MedicineTransaction {
   @Column({ type: "decimal", precision: 14, scale: 4, nullable: true })
   unitPrice: string | null;
 
+  @Column({ type: "decimal", precision: 14, scale: 4, nullable: true })
+  taxBase: string | null;
+
+  @Column({ type: "decimal", precision: 6, scale: 4, nullable: true })
+  taxRate: string | null;
+
+  @Column({ type: "decimal", precision: 14, scale: 4, nullable: true })
+  taxAmount: string | null;
+
   @Column({ type: "timestamptz" })
   recordedAt: Date;
 

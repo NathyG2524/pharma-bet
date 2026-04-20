@@ -26,6 +26,13 @@ function formatDt(iso: string) {
   }
 }
 
+function formatRate(rate: string | null) {
+  if (!rate) return "—";
+  const parsed = Number.parseFloat(rate);
+  if (!Number.isFinite(parsed)) return rate;
+  return `${(parsed * 100).toFixed(2)}%`;
+}
+
 export default function MedicineDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
@@ -509,6 +516,15 @@ export default function MedicineDetailPage() {
                           Unit price
                         </th>
                         <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Tax base
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Tax rate
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                          Tax amount
+                        </th>
+                        <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
                           When
                         </th>
                         <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
@@ -536,6 +552,9 @@ export default function MedicineDetailPage() {
                           </td>
                           <td className="px-4 py-4 text-on_surface">{t.quantity}</td>
                           <td className="px-4 py-4">{t.unitPrice ?? "—"}</td>
+                          <td className="px-4 py-4">{t.taxBase ?? "—"}</td>
+                          <td className="px-4 py-4">{formatRate(t.taxRate)}</td>
+                          <td className="px-4 py-4">{t.taxAmount ?? "—"}</td>
                           <td className="px-4 py-4 text-on_surface_variant">
                             {formatDt(t.recordedAt)}
                           </td>

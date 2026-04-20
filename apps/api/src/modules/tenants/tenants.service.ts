@@ -1,8 +1,9 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, type Repository } from "typeorm";
 import { Tenant } from "../../entities/tenant.entity";
 import { UserMembership, UserRole } from "../../entities/user-membership.entity";
+import { AuditEventsService } from "../audit-events/audit-events.service";
 import type { AuthContext } from "../tenancy/auth-context";
 import type { CreateTenantDto } from "./dto/create-tenant.dto";
 
@@ -13,6 +14,8 @@ export class TenantsService {
     private readonly tenantRepo: Repository<Tenant>,
     @InjectRepository(UserMembership)
     private readonly membershipRepo: Repository<UserMembership>,
+    @Inject(AuditEventsService)
+    private readonly auditEventsService: AuditEventsService,
   ) {}
 
   async listForUser(context: AuthContext): Promise<Tenant[]> {
@@ -49,6 +52,17 @@ export class TenantsService {
         }),
       );
     }
+    await this.auditEventsService.recordEvent({
+      tenantId: tenant.id,
+      actorUserId: context.userId ?? "unknown",
+      action: "tenant.created",
+      entityType: "tenant",
+      entityId: tenant.id,
+      metadata: {
+        name: tenant.name,
+        hqAdminUserId: hqAdminUserId ?? null,
+      },
+    });
     return tenant;
   }
 }
