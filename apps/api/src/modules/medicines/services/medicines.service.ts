@@ -732,7 +732,7 @@ export class MedicinesService {
       }
       if (available === 0 && blockedQuantity > 0) {
         throw new ConflictException(
-          "Cannot allocate from quarantined or recalled lots. Use active lots instead.",
+          "No active lots available for allocation. Quarantined or recalled lots cannot be used.",
         );
       }
       if (available === 0 && overlay.stockQuantity < dto.quantity) {
