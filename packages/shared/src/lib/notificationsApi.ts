@@ -1,4 +1,8 @@
-import type { NotificationDto } from "../types/purchasing";
+import type {
+  CreatePoPendingBranchApprovalNotificationInput,
+  NotificationDispatchResult,
+  NotificationDto,
+} from "../types/notification";
 
 export class NotificationsApi {
   private apiBaseUrl: string | null = null;
@@ -35,6 +39,24 @@ export class NotificationsApi {
 
   async listNotifications(): Promise<NotificationDto[]> {
     return this.request<NotificationDto[]>("/api/notifications");
+  }
+
+  async markNotificationRead(id: string): Promise<NotificationDto> {
+    return this.request<NotificationDto>(`/api/notifications/${id}/read`, {
+      method: "PATCH",
+    });
+  }
+
+  async notifyPoPendingBranchApproval(
+    dto: CreatePoPendingBranchApprovalNotificationInput,
+  ): Promise<NotificationDispatchResult> {
+    return this.request<NotificationDispatchResult>(
+      "/api/notifications/po-pending-branch-approval",
+      {
+        method: "POST",
+        body: JSON.stringify(dto),
+      },
+    );
   }
 }
 

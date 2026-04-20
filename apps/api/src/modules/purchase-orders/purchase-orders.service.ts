@@ -346,13 +346,10 @@ export class PurchaseOrdersService {
       });
     });
 
-    await this.notificationsService.createForBranch({
-      tenantId: scope.tenantId,
+    await this.notificationsService.notifyPoPendingBranchApproval(context, {
+      poId: updated.id,
       branchId: updated.branchId,
-      type: "po_pending_approval",
-      title: "Purchase order pending approval",
-      message: `PO ${updated.id} is awaiting branch approval.`,
-      entityId: updated.id,
+      poNumber: updated.id,
     });
 
     return updated;

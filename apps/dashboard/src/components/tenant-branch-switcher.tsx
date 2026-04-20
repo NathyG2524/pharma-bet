@@ -75,7 +75,7 @@ export function TenantBranchSwitcher() {
 
   useEffect(() => {
     const branchIds = branches.map((branch) => branch.id);
-    const patch: { branchIds?: string[]; activeBranchId?: string } = {};
+    const patch: { branchIds?: string[]; activeBranchId?: string | null } = {};
     if (!arraysEqual(branchIds, state.branchIds)) {
       patch.branchIds = branchIds;
     }

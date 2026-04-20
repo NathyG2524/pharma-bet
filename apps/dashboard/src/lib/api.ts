@@ -1,10 +1,12 @@
 import {
+  auditEventsApi,
   branchesApi,
   medicinesApi,
   notificationsApi,
   patientsApi,
   purchaseOrdersApi,
   suppliersApi,
+  taxesApi,
   tenantsApi,
 } from "@drug-store/shared";
 import { getAuthHeaders } from "./auth-storage";
@@ -21,9 +23,11 @@ if (apiUrl) {
   medicinesApi.configure(options);
   branchesApi.configure(options);
   tenantsApi.configure(options);
-  suppliersApi.configure(options);
   purchaseOrdersApi.configure(options);
   notificationsApi.configure(options);
+  auditEventsApi.configure(options);
+  taxesApi.configure(options);
+  suppliersApi.configure(options);
 }
 
 export {
@@ -31,7 +35,9 @@ export {
   medicinesApi,
   branchesApi,
   tenantsApi,
-  suppliersApi,
   purchaseOrdersApi,
   notificationsApi,
+  auditEventsApi,
+  taxesApi,
+  suppliersApi,
 };

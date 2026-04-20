@@ -1,14 +1,16 @@
-import { Controller, Get, Inject, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { UserRole } from "../../entities/user-membership.entity";
 import type { AuthContext } from "../tenancy/auth-context";
-import { AuthContextParam } from "../tenancy/auth.decorators";
+import { AuthContextParam, Roles } from "../tenancy/auth.decorators";
 import { AuthGuard } from "../tenancy/auth.guard";
-import { BranchGuard } from "../tenancy/branch.guard";
+import { RolesGuard } from "../tenancy/roles.guard";
+import type { CreatePoPendingBranchApprovalDto } from "./dto/create-po-pending-branch-approval.dto";
 import { NotificationsService } from "./notifications.service";
 
 @Controller()
 @ApiTags("Notifications")
-@UseGuards(AuthGuard, BranchGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class NotificationsController {
   constructor(
     @Inject(NotificationsService)
@@ -17,6 +19,20 @@ export class NotificationsController {
 
   @Get("notifications")
   async list(@AuthContextParam() context: AuthContext) {
-    return this.notificationsService.listForBranch(context);
+    return this.notificationsService.listForUser(context);
+  }
+
+  @Patch("notifications/:id/read")
+  async markRead(@AuthContextParam() context: AuthContext, @Param("id") id: string) {
+    return this.notificationsService.markRead(context, id);
+  }
+
+  @Post("notifications/po-pending-branch-approval")
+  @Roles(UserRole.HQ_ADMIN, UserRole.HQ_USER, UserRole.PLATFORM_ADMIN)
+  async notifyPoPendingBranchApproval(
+    @AuthContextParam() context: AuthContext,
+    @Body() dto: CreatePoPendingBranchApprovalDto,
+  ) {
+    return this.notificationsService.notifyPoPendingBranchApproval(context, dto);
   }
 }

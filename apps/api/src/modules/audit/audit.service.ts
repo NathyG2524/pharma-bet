@@ -24,6 +24,8 @@ export class AuditService {
       branchId: context.activeBranchId ?? null,
       userId: context.userId,
       action,
+      entityType: "patient",
+      entityId: patientId,
       patientId,
     });
     return this.auditRepo.save(event);

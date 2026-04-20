@@ -13,8 +13,8 @@ export default function SuppliersPage() {
   );
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +22,7 @@ export default function SuppliersPage() {
     if (!isHqUser) return;
     try {
       const res = await suppliersApi.listSuppliers();
-      setSuppliers(res);
+      setSuppliers(res.items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load suppliers");
     }
@@ -42,13 +42,13 @@ export default function SuppliersPage() {
     try {
       const created = await suppliersApi.createSupplier({
         name: name.trim(),
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
+        contactEmail: contactEmail.trim() || null,
+        contactPhone: contactPhone.trim() || null,
       });
       setSuppliers((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setName("");
-      setEmail("");
-      setPhone("");
+      setContactEmail("");
+      setContactPhone("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create supplier");
     } finally {
@@ -102,8 +102,8 @@ export default function SuppliersPage() {
               </label>
               <Input
                 id="supplier-email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
                 disabled={!isHqUser || loading}
               />
             </div>
@@ -116,8 +116,8 @@ export default function SuppliersPage() {
               </label>
               <Input
                 id="supplier-phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
                 disabled={!isHqUser || loading}
               />
             </div>
@@ -145,8 +145,8 @@ export default function SuppliersPage() {
                   <div>
                     <p className="font-medium text-on_surface">{supplier.name}</p>
                     <p className="text-xs text-on_surface_variant">
-                      {supplier.email || supplier.phone
-                        ? `${supplier.email ?? "—"} · ${supplier.phone ?? "—"}`
+                      {supplier.contactEmail || supplier.contactPhone
+                        ? `${supplier.contactEmail ?? "—"} · ${supplier.contactPhone ?? "—"}`
                         : "No contact details"}
                     </p>
                   </div>

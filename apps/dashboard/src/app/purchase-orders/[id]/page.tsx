@@ -91,7 +91,7 @@ export default function PurchaseOrderDetailPage() {
         branchesApi.listBranches(),
         medicinesApi.listCanonicalMedicines({ limit: 200, offset: 0 }),
       ]);
-      setSuppliers(supplierData);
+      setSuppliers(supplierData.items);
       setBranches(branchData);
       setMedicines(medicineData.items);
     } catch (err) {

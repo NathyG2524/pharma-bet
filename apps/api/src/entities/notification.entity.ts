@@ -1,17 +1,7 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  Index,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { Branch } from "./branch.entity";
-import { Tenant } from "./tenant.entity";
-
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 @Entity({ name: "notifications" })
-@Index("IDX_notifications_tenant_branch", ["tenantId", "branchId"])
+@Index("IDX_notifications_user", ["tenantId", "userId"])
+@Index("IDX_notifications_event", ["tenantId", "userId", "eventKey"], { unique: true })
 export class Notification {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -19,28 +9,29 @@ export class Notification {
   @Column({ type: "uuid" })
   tenantId: string;
 
-  @ManyToOne(() => Tenant, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "tenantId" })
-  tenant: Tenant;
-
-  @Column({ type: "uuid" })
-  branchId: string;
-
-  @ManyToOne(() => Branch, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "branchId" })
-  branch: Branch;
+  @Column({ type: "uuid", nullable: true })
+  branchId: string | null;
 
   @Column({ type: "varchar" })
-  type: string;
+  userId: string;
 
   @Column({ type: "varchar" })
   title: string;
 
   @Column({ type: "text" })
-  message: string;
+  body: string;
 
-  @Column({ type: "uuid", nullable: true })
-  entityId: string | null;
+  @Column({ type: "varchar", nullable: true })
+  link: string | null;
+
+  @Column({ type: "varchar" })
+  eventType: string;
+
+  @Column({ type: "varchar" })
+  eventKey: string;
+
+  @Column({ type: "boolean", default: false })
+  isRead: boolean;
 
   @Column({ type: "timestamptz", nullable: true })
   readAt: Date | null;

@@ -72,7 +72,7 @@ export default function PurchaseOrderApprovalsPage() {
                 >
                   <div>
                     <p className="font-medium text-on_surface">{note.title}</p>
-                    <p className="text-xs text-on_surface_variant">{note.message}</p>
+                    <p className="text-xs text-on_surface_variant">{note.body}</p>
                   </div>
                   <span className="text-xs text-on_surface_variant">
                     {new Date(note.createdAt).toLocaleString()}
