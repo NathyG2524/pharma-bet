@@ -292,7 +292,7 @@ export class ApprovalsService {
     approval.approvalPath = {
       bm: approval.bmDecisionPath,
       hq: approval.hqDecisionPath,
-      combined: this.isCombinedPath(approval.bmDecisionPath),
+      usesCombinedPath: this.isCombinedPath(approval.bmDecisionPath),
     };
 
     const saved = await this.approvalRepo.save(approval);
