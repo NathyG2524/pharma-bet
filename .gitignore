@@ -32,6 +32,10 @@ coverage/
 # Turbo repo
 .turbo/
 
+# TypeScript build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
 # Biome/Prettier
 .pnp
 .pnp.js
