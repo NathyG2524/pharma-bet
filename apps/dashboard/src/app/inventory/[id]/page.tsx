@@ -190,6 +190,8 @@ export default function MedicineDetailPage() {
     }
   };
 
+  const isLotStatusChangeDisabled = (lot: InventoryLotDto) => lot.status === "RECALLED";
+
   const getLotStatusLabel = (lot: InventoryLotDto) => {
     if (lot.status === "RECALLED") return "Recalled";
     if (lot.status === "QUARANTINE") return "Quarantined";
@@ -705,7 +707,9 @@ export default function MedicineDetailPage() {
                                     e.target.value as InventoryLotStatus,
                                   )
                                 }
-                                disabled={lotStatusUpdating[lot.id] || lot.status === "RECALLED"}
+                                disabled={
+                                  lotStatusUpdating[lot.id] || isLotStatusChangeDisabled(lot)
+                                }
                                 aria-label={`Change status for lot ${lot.lotCode}`}
                               >
                                 <option value="ACTIVE">Active</option>
