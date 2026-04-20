@@ -1,6 +1,7 @@
 "use client";
 
 import { medicinesApi, patientsApi, salesApi } from "@/lib/api";
+import { getMutationErrorMessage } from "@/lib/mutation-error";
 import { isValidPhone, normalizePhone, parseLocalDateTime } from "@/lib/validation";
 import type { MedicineDto, SaleDto } from "@drug-store/shared";
 import {
@@ -212,7 +213,7 @@ export default function SellPage() {
       setLines([createLine()]);
       await loadMedicines();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(getMutationErrorMessage(err, "Sale was not recorded."));
     } finally {
       setLoading(false);
     }

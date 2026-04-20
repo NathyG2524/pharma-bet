@@ -2,28 +2,36 @@
 
 import { approvalsApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { getMutationErrorMessage } from "@/lib/mutation-error";
 import type { ApprovalInstanceDto, RecordApprovalDecisionInput } from "@drug-store/shared";
-import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, Textarea } from "@drug-store/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  Textarea,
+} from "@drug-store/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 type ApprovalStatus = "pending" | "approved" | "rejected";
 
-const statusVariants: Record<ApprovalStatus, "default" | "success" | "warning" | "destructive"> =
-  {
-    pending: "warning",
-    approved: "success",
-    rejected: "destructive",
-  };
+const statusVariants: Record<ApprovalStatus, "default" | "success" | "warning" | "destructive"> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "destructive",
+};
 
 export default function ApprovalsInboxPage() {
   const { state } = useAuthContext();
   const isApprover = state.roles.some((role) =>
     ["branch_manager", "hq_admin", "hq_user", "platform_admin"].includes(role),
   );
-  const isHq = state.roles.some((role) =>
-    ["hq_admin", "hq_user", "platform_admin"].includes(role),
-  );
+  const isHq = state.roles.some((role) => ["hq_admin", "hq_user", "platform_admin"].includes(role));
   const isBm = state.roles.some((role) => ["branch_manager"].includes(role));
 
   const [approvals, setApprovals] = useState<ApprovalInstanceDto[]>([]);
@@ -71,7 +79,7 @@ export default function ApprovalsInboxPage() {
       setReason("");
       await load();
     } catch (err) {
-      setDecisionError(err instanceof Error ? err.message : "Failed to record decision");
+      setDecisionError(getMutationErrorMessage(err, "Decision was not submitted."));
     } finally {
       setDeciding(false);
     }
@@ -121,10 +129,7 @@ export default function ApprovalsInboxPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="decision"
-                className="mb-1.5 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="decision" className="mb-1.5 block text-sm font-medium text-gray-700">
                 Decision
               </label>
               <Select
@@ -284,7 +289,9 @@ export default function ApprovalsInboxPage() {
                       <td className="px-4 py-3">{a.domainType.replace(/_/g, " ")}</td>
                       <td className="px-4 py-3">{a.domainId.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={statusVariants[a.status as ApprovalStatus]}>{a.status}</Badge>
+                        <Badge variant={statusVariants[a.status as ApprovalStatus]}>
+                          {a.status}
+                        </Badge>
                       </td>
                       <td className="px-4 py-3">
                         {a.domainType === "adjustment" && (
