@@ -3,6 +3,7 @@ import {
   branchesApi,
   medicinesApi,
   patientsApi,
+  suppliersApi,
   taxesApi,
   tenantsApi,
 } from "@drug-store/shared";
@@ -22,6 +23,15 @@ if (apiUrl) {
   tenantsApi.configure(options);
   auditEventsApi.configure(options);
   taxesApi.configure(options);
+  suppliersApi.configure(options);
 }
 
-export { patientsApi, medicinesApi, branchesApi, tenantsApi, auditEventsApi, taxesApi };
+export {
+  patientsApi,
+  medicinesApi,
+  branchesApi,
+  tenantsApi,
+  auditEventsApi,
+  taxesApi,
+  suppliersApi,
+};
