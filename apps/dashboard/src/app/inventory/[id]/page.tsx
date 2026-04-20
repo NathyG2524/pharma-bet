@@ -705,23 +705,28 @@ export default function MedicineDetailPage() {
                               {getLotStatusLabel(lot)}
                             </Badge>
                             {isHqUser && (
-                              <Select
-                                value={lot.status}
-                                onChange={(e) =>
-                                  handleLotStatusChange(
-                                    lot.id,
-                                    e.target.value as InventoryLotStatusType,
-                                  )
-                                }
-                                disabled={
-                                  lotStatusUpdating[lot.id] || isLotStatusChangeDisabled(lot)
-                                }
-                                aria-label={`Change status for lot ${lot.lotCode}`}
-                              >
-                                <option value="ACTIVE">Active</option>
-                                <option value="QUARANTINE">Quarantine</option>
-                                <option value="RECALLED">Recalled</option>
-                              </Select>
+                              <>
+                                <span className="text-xs font-medium text-on_surface_variant">
+                                  Set status
+                                </span>
+                                <Select
+                                  value={lot.status}
+                                  onChange={(e) =>
+                                    handleLotStatusChange(
+                                      lot.id,
+                                      e.target.value as InventoryLotStatusType,
+                                    )
+                                  }
+                                  disabled={
+                                    lotStatusUpdating[lot.id] || isLotStatusChangeDisabled(lot)
+                                  }
+                                  aria-label={`Change status for lot ${lot.lotCode}`}
+                                >
+                                  <option value="ACTIVE">Active</option>
+                                  <option value="QUARANTINE">Quarantine</option>
+                                  <option value="RECALLED">Recalled</option>
+                                </Select>
+                              </>
                             )}
                           </div>
                         </td>

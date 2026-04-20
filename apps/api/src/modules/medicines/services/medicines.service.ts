@@ -731,7 +731,9 @@ export class MedicinesService {
         throw new ConflictException("Not enough stock");
       }
       if (available === 0 && blockedQuantity > 0) {
-        throw new ConflictException("Lot status blocks allocation");
+        throw new ConflictException(
+          "Cannot allocate from quarantined or recalled lots. Use active lots instead.",
+        );
       }
       if (available === 0 && overlay.stockQuantity < dto.quantity) {
         throw new ConflictException("Not enough stock");
