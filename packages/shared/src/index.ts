@@ -133,6 +133,17 @@ export type {
   StockCountVarianceDto,
   SubmitSessionInput,
 } from "./types/stock-count";
+export { SupplierReturnsApi, supplierReturnsApi } from "./lib/supplierReturnsApi";
+export type {
+  CreateSupplierReturnInput,
+  CreateSupplierReturnLineInput,
+  HqConfirmSupplierReturnInput,
+  SubmitSupplierReturnForApprovalInput,
+  SupplierReturnDto,
+  SupplierReturnLineDto,
+  SupplierReturnListResponse,
+  SupplierReturnStatus,
+} from "./types/supplier-return";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";

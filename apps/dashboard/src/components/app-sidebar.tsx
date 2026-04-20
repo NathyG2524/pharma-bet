@@ -49,6 +49,7 @@ const inventoryLinks: NavItem[] = [
   { href: "/transfers", label: "Transfers", icon: Truck },
   { href: "/adjustments", label: "Adjustments", icon: ClipboardList },
   { href: "/stock-counts", label: "Stock counts", icon: CheckSquare },
+  { href: "/supplier-returns", label: "Supplier returns", icon: Truck },
 ];
 
 const branchInventoryLinks: NavItem[] = [
@@ -60,6 +61,7 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/transfers", label: "Transfers", icon: Truck },
   { href: "/adjustments", label: "Adjustments", icon: ClipboardList },
   { href: "/stock-counts", label: "Stock counts", icon: CheckSquare },
+  { href: "/supplier-returns", label: "Supplier returns", icon: Truck },
 ];
 
 const purchasingLinks: NavItem[] = [
