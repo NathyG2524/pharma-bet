@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { ApprovalsModule } from "./modules/approvals/approvals.module";
 import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { InventoryModule } from "./modules/inventory/inventory.module";
@@ -21,6 +22,7 @@ import { typeOrmConfig } from "./typeorm-config";
     TenancyModule,
     TenantsModule,
     AuditEventsModule,
+    ApprovalsModule,
     BranchesModule,
     PatientsModule,
     MedicinesModule,

@@ -25,6 +25,16 @@ type NotificationInsertPayload = {
   link: string | null;
 };
 
+export type CreateApprovalStateNotificationDto = {
+  branchId?: string | null;
+  recipientUserIds: string[];
+  title: string;
+  body: string;
+  link?: string | null;
+  eventType: string;
+  eventKey: string;
+};
+
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -132,6 +142,54 @@ export class NotificationsService {
       emailed += 1;
     }
 
+    return { created: createdNotifications.length, emailed };
+  }
+
+  async notifyApprovalStateChange(
+    context: AuthContext,
+    dto: CreateApprovalStateNotificationDto,
+  ): Promise<{ created: number; emailed: number }> {
+    const scope = this.getUserScope(context);
+    const userIds = Array.from(new Set(dto.recipientUserIds.map((userId) => userId.trim()))).filter(
+      Boolean,
+    );
+    if (!userIds.length) {
+      return { created: 0, emailed: 0 };
+    }
+
+    const notifications = userIds.map((userId) => ({
+      tenantId: scope.tenantId,
+      branchId: dto.branchId ?? null,
+      userId,
+      title: dto.title,
+      body: dto.body,
+      link: dto.link ?? null,
+      eventType: dto.eventType,
+      eventKey: dto.eventKey,
+    }));
+
+    const insertResult = await this.notificationRepo
+      .createQueryBuilder()
+      .insert()
+      .values(notifications)
+      .orIgnore()
+      .returning(["id", "userId", "title", "body", "link"])
+      .execute();
+
+    const createdNotifications = insertResult.raw as NotificationInsertPayload[];
+    let emailed = 0;
+    for (const notification of createdNotifications) {
+      const recipient = this.emailService.resolveRecipient(notification.userId);
+      if (!recipient) {
+        continue;
+      }
+      await this.emailService.sendNotificationEmail({
+        to: recipient,
+        subject: notification.title,
+        body: notification.body,
+      });
+      emailed += 1;
+    }
     return { created: createdNotifications.length, emailed };
   }
 }
