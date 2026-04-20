@@ -12,6 +12,7 @@ import { SuppliersModule } from "./modules/suppliers/suppliers.module";
 import { TaxesModule } from "./modules/taxes/taxes.module";
 import { TenancyModule } from "./modules/tenancy/tenancy.module";
 import { TenantsModule } from "./modules/tenants/tenants.module";
+import { TransfersModule } from "./modules/transfers/transfers.module";
 import { typeOrmConfig } from "./typeorm-config";
 
 @Module({
@@ -29,6 +30,7 @@ import { typeOrmConfig } from "./typeorm-config";
     TaxesModule,
     InventoryModule,
     SalesModule,
+    TransfersModule,
   ],
 })
 export class AppModule {}

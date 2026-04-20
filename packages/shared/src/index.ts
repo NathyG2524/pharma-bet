@@ -43,6 +43,8 @@ export type {
   InventoryLotDto,
   InventoryLotListResponse,
   InventoryLotStatus,
+  OrgOnHandLineDto,
+  OrgOnHandResponse,
   InventoryValuationLineDto,
   InventoryValuationResponse,
   UpdateLotStatusRequest,
@@ -91,6 +93,20 @@ export type {
   SaleLineAllocationInput,
   SaleLineDto,
 } from "./types/sales";
+export type {
+  CreateTransferInput,
+  CreateTransferLineInput,
+  ReceiveTransferAllocationInput,
+  ReceiveTransferInput,
+  ShipTransferInput,
+  ShipTransferLineAllocationInput,
+  ShipTransferLineInput,
+  TransferDto,
+  TransferLineAllocationDto,
+  TransferLineDto,
+  TransferListResponse,
+  TransferStatus,
+} from "./types/transfer";
 export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
@@ -102,3 +118,4 @@ export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
 export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";
 export { SalesApi, salesApi } from "./lib/salesApi";
+export { TransfersApi, transfersApi } from "./lib/transfersApi";

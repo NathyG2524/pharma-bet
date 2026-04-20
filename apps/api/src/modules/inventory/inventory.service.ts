@@ -167,6 +167,47 @@ export class InventoryService {
     const totalValue = sumDecimalStrings(lines.map((line) => line.totalValue));
     return { totalValue, lines };
   }
+
+  async getOrgOnHand(context: AuthContext): Promise<{
+    items: {
+      branchId: string;
+      branchName: string;
+      medicineId: string;
+      medicineName: string;
+      quantityOnHand: number;
+    }[];
+    total: number;
+  }> {
+    if (!context.tenantId) {
+      throw new NotFoundException("Tenant context required");
+    }
+    const rows = await this.lotRepo
+      .createQueryBuilder("lot")
+      .innerJoin("lot.medicine", "medicine")
+      .innerJoin("lot.branch", "branch")
+      .select("lot.branchId", "branchId")
+      .addSelect("branch.name", "branchName")
+      .addSelect("lot.medicineId", "medicineId")
+      .addSelect("medicine.name", "medicineName")
+      .addSelect("SUM(lot.quantityOnHand)", "quantityOnHand")
+      .where("lot.tenantId = :tenantId", { tenantId: context.tenantId })
+      .groupBy("lot.branchId")
+      .addGroupBy("branch.name")
+      .addGroupBy("lot.medicineId")
+      .addGroupBy("medicine.name")
+      .orderBy("branch.name", "ASC")
+      .addOrderBy("medicine.name", "ASC")
+      .getRawMany();
+
+    const items = rows.map((row) => ({
+      branchId: row.branchId,
+      branchName: row.branchName,
+      medicineId: row.medicineId,
+      medicineName: row.medicineName,
+      quantityOnHand: Number(row.quantityOnHand ?? 0),
+    }));
+    return { items, total: items.length };
+  }
 }
 
 const sumDecimalStrings = (values: string[], scale = 4): string => {

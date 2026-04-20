@@ -10,6 +10,7 @@ import {
   suppliersApi,
   taxesApi,
   tenantsApi,
+  transfersApi,
 } from "@drug-store/shared";
 import { getAuthHeaders } from "./auth-storage";
 
@@ -32,6 +33,7 @@ if (apiUrl) {
   taxesApi.configure(options);
   suppliersApi.configure(options);
   salesApi.configure(options);
+  transfersApi.configure(options);
 }
 
 export {
@@ -46,4 +48,5 @@ export {
   taxesApi,
   suppliersApi,
   salesApi,
+  transfersApi,
 };
