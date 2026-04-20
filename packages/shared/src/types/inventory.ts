@@ -29,6 +29,19 @@ export interface InventoryValuationResponse {
   lines: InventoryValuationLineDto[];
 }
 
+export interface OrgOnHandLineDto {
+  branchId: string;
+  branchName: string;
+  medicineId: string;
+  medicineName: string;
+  quantityOnHand: number;
+}
+
+export interface OrgOnHandResponse {
+  items: OrgOnHandLineDto[];
+  total: number;
+}
+
 export interface UpdateLotStatusRequest {
   status: InventoryLotStatus;
   reason?: string | null;

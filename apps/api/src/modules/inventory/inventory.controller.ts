@@ -11,7 +11,7 @@ import { InventoryService } from "./inventory.service";
 
 @Controller("inventory")
 @ApiTags("Inventory")
-@UseGuards(AuthGuard, BranchGuard)
+@UseGuards(AuthGuard)
 export class InventoryController {
   constructor(
     @Inject(InventoryService)
@@ -19,6 +19,7 @@ export class InventoryController {
   ) {}
 
   @Get("lots")
+  @UseGuards(BranchGuard)
   @ApiQuery({ name: "medicineId", required: false })
   async listLots(
     @AuthContextParam() context: AuthContext,
@@ -28,12 +29,20 @@ export class InventoryController {
   }
 
   @Get("valuation")
+  @UseGuards(BranchGuard)
   async valuation(@AuthContextParam() context: AuthContext) {
     return this.inventoryService.getBranchValuation(context);
   }
 
-  @Patch("lots/:id/status")
+  @Get("org-on-hand")
   @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES)
+  async orgOnHand(@AuthContextParam() context: AuthContext) {
+    return this.inventoryService.getOrgOnHand(context);
+  }
+
+  @Patch("lots/:id/status")
+  @UseGuards(BranchGuard, RolesGuard)
   @Roles(...HQ_ROLES)
   async updateLotStatus(
     @AuthContextParam() context: AuthContext,

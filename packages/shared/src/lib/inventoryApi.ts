@@ -2,6 +2,7 @@ import type {
   InventoryLotDto,
   InventoryLotListResponse,
   InventoryValuationResponse,
+  OrgOnHandResponse,
   UpdateLotStatusRequest,
 } from "../types/inventory";
 
@@ -62,6 +63,10 @@ export class InventoryApi {
 
   async getValuation(): Promise<InventoryValuationResponse> {
     return this.request<InventoryValuationResponse>("/api/inventory/valuation");
+  }
+
+  async getOrgOnHand(): Promise<OrgOnHandResponse> {
+    return this.request<OrgOnHandResponse>("/api/inventory/org-on-hand");
   }
 }
 
