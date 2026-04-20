@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -8,6 +9,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, type Repository } from "typeorm";
 import { Branch } from "../../entities/branch.entity";
 import { UserMembership, UserRole } from "../../entities/user-membership.entity";
+import { AuditEventsService } from "../audit-events/audit-events.service";
 import type { AuthContext } from "../tenancy/auth-context";
 import type { AssignMembershipDto } from "./dto/assign-membership.dto";
 import type { CreateBranchDto } from "./dto/create-branch.dto";
@@ -22,6 +24,8 @@ export class BranchesService {
     private readonly branchRepo: Repository<Branch>,
     @InjectRepository(UserMembership)
     private readonly membershipRepo: Repository<UserMembership>,
+    @Inject(AuditEventsService)
+    private readonly auditEventsService: AuditEventsService,
   ) {}
 
   async listForUser(context: AuthContext): Promise<Branch[]> {
@@ -51,7 +55,19 @@ export class BranchesService {
       name,
       code: dto.code?.trim() || null,
     });
-    return this.branchRepo.save(branch);
+    const savedBranch = await this.branchRepo.save(branch);
+    await this.auditEventsService.recordEvent({
+      tenantId: context.tenantId ?? "",
+      actorUserId: context.userId ?? "unknown",
+      action: "branch.created",
+      entityType: "branch",
+      entityId: savedBranch.id,
+      metadata: {
+        name: savedBranch.name,
+        code: savedBranch.code ?? null,
+      },
+    });
+    return savedBranch;
   }
 
   async assignMembership(context: AuthContext, dto: AssignMembershipDto): Promise<UserMembership> {
@@ -94,6 +110,19 @@ export class BranchesService {
       userId,
       role,
     });
-    return this.membershipRepo.save(membership);
+    const savedMembership = await this.membershipRepo.save(membership);
+    await this.auditEventsService.recordEvent({
+      tenantId: context.tenantId ?? "",
+      actorUserId: context.userId ?? "unknown",
+      action: "membership.assigned",
+      entityType: "membership",
+      entityId: savedMembership.id,
+      metadata: {
+        userId: savedMembership.userId,
+        role: savedMembership.role,
+        branchId: savedMembership.branchId ?? null,
+      },
+    });
+    return savedMembership;
   }
 }

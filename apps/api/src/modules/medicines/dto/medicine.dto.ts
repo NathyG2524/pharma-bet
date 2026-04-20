@@ -6,6 +6,7 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
 } from "class-validator";
@@ -34,6 +35,11 @@ export class CreateMedicineDto {
   @IsString()
   @MaxLength(100)
   barcode?: string;
+
+  @ApiPropertyOptional({ description: "Tax category id" })
+  @IsOptional()
+  @IsUUID()
+  taxCategoryId?: string;
 }
 
 export class CreateDraftMedicineDto {
@@ -60,6 +66,11 @@ export class CreateDraftMedicineDto {
   @IsString()
   @MaxLength(100)
   barcode?: string;
+
+  @ApiPropertyOptional({ description: "Tax category id" })
+  @IsOptional()
+  @IsUUID()
+  taxCategoryId?: string;
 }
 
 export class DedupeCheckQueryDto {
@@ -105,6 +116,11 @@ export class UpdateMedicineDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ description: "Tax category id (null clears)" })
+  @IsOptional()
+  @IsUUID()
+  taxCategoryId?: string | null;
 }
 
 export class UpdateMedicineOverlayDto {
