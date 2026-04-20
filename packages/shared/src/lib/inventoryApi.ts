@@ -1,4 +1,9 @@
-import type { InventoryLotListResponse, InventoryValuationResponse } from "../types/inventory";
+import type {
+  InventoryLotDto,
+  InventoryLotListResponse,
+  InventoryValuationResponse,
+  UpdateLotStatusRequest,
+} from "../types/inventory";
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
   const q = new URLSearchParams();
@@ -46,6 +51,13 @@ export class InventoryApi {
   async listLots(params?: { medicineId?: string }): Promise<InventoryLotListResponse> {
     const q = buildQuery({ medicineId: params?.medicineId });
     return this.request<InventoryLotListResponse>(`/api/inventory/lots${q}`);
+  }
+
+  async updateLotStatus(lotId: string, payload: UpdateLotStatusRequest): Promise<InventoryLotDto> {
+    return this.request<InventoryLotDto>(`/api/inventory/lots/${lotId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
   }
 
   async getValuation(): Promise<InventoryValuationResponse> {

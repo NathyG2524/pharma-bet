@@ -5,6 +5,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import type {
   CanonicalMedicineDto,
   InventoryLotDto,
+  InventoryLotStatus,
   MedicineDto,
   MedicineTransactionDto,
 } from "@drug-store/shared";
@@ -46,6 +47,7 @@ export default function MedicineDetailPage() {
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
   const isBranchUser = state.roles.some((role) => ["branch_manager", "branch_user"].includes(role));
+  const canViewLots = isBranchUser || isHqUser;
 
   const [medicine, setMedicine] = useState<MedicineDto | null>(null);
   const [catalogItem, setCatalogItem] = useState<CanonicalMedicineDto | null>(null);
@@ -53,6 +55,8 @@ export default function MedicineDetailPage() {
   const [totalTx, setTotalTx] = useState(0);
   const [lots, setLots] = useState<InventoryLotDto[]>([]);
   const [lotsLoading, setLotsLoading] = useState(false);
+  const [lotStatusError, setLotStatusError] = useState<string | null>(null);
+  const [lotStatusUpdating, setLotStatusUpdating] = useState<Record<string, boolean>>({});
   const pageSize = 30;
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
@@ -127,7 +131,7 @@ export default function MedicineDetailPage() {
   }, [id, medicineId, isBranchUser]);
 
   useEffect(() => {
-    if (!id || !medicineId || !isBranchUser) return;
+    if (!id || !medicineId || !canViewLots) return;
     void (async () => {
       setLotsLoading(true);
       try {
@@ -139,7 +143,7 @@ export default function MedicineDetailPage() {
         setLotsLoading(false);
       }
     })();
-  }, [id, medicineId, isBranchUser]);
+  }, [id, medicineId, canViewLots]);
 
   useEffect(() => {
     if (!canonical) return;
@@ -170,6 +174,34 @@ export default function MedicineDetailPage() {
     } finally {
       setTxLoading(false);
     }
+  };
+
+  const handleLotStatusChange = async (lotId: string, status: InventoryLotStatus) => {
+    if (!isHqUser) return;
+    setLotStatusError(null);
+    setLotStatusUpdating((prev) => ({ ...prev, [lotId]: true }));
+    try {
+      const updated = await inventoryApi.updateLotStatus(lotId, { status });
+      setLots((prev) => prev.map((lot) => (lot.id === updated.id ? updated : lot)));
+    } catch {
+      setLotStatusError("Unable to update lot status. Please try again.");
+    } finally {
+      setLotStatusUpdating((prev) => ({ ...prev, [lotId]: false }));
+    }
+  };
+
+  const getLotStatusLabel = (lot: InventoryLotDto) => {
+    if (lot.status === "RECALLED") return "Recalled";
+    if (lot.status === "QUARANTINE") return "Quarantined";
+    if (lot.isExpired) return "Expired";
+    return "Active";
+  };
+
+  const getLotStatusVariant = (lot: InventoryLotDto) => {
+    if (lot.status === "RECALLED") return "destructive";
+    if (lot.status === "QUARANTINE") return "warning";
+    if (lot.isExpired) return "warning";
+    return "success";
   };
 
   const handlePromote = async () => {
@@ -616,12 +648,13 @@ export default function MedicineDetailPage() {
         </Card>
       )}
 
-      {isBranchUser && (
+      {canViewLots && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Lots on hand</CardTitle>
           </CardHeader>
           <CardContent>
+            {lotStatusError && <Alert variant="destructive">{lotStatusError}</Alert>}
             {lotsLoading ? (
               <p className="text-sm text-gray-500">Loading lots…</p>
             ) : lots.length === 0 ? (
@@ -659,11 +692,27 @@ export default function MedicineDetailPage() {
                         <td className="px-4 py-4 text-on_surface">{lot.quantityOnHand}</td>
                         <td className="px-4 py-4 text-on_surface_variant">{lot.unitCost}</td>
                         <td className="px-4 py-4">
-                          {lot.isExpired ? (
-                            <Badge variant="warning">Expired</Badge>
-                          ) : (
-                            <Badge variant="success">OK</Badge>
-                          )}
+                          <div className="flex flex-col gap-2">
+                            <Badge variant={getLotStatusVariant(lot)}>
+                              {getLotStatusLabel(lot)}
+                            </Badge>
+                            {isHqUser && (
+                              <Select
+                                value={lot.status}
+                                onChange={(e) =>
+                                  handleLotStatusChange(
+                                    lot.id,
+                                    e.target.value as InventoryLotStatus,
+                                  )
+                                }
+                                disabled={lotStatusUpdating[lot.id] || lot.status === "RECALLED"}
+                              >
+                                <option value="ACTIVE">Active</option>
+                                <option value="QUARANTINE">Quarantine</option>
+                                <option value="RECALLED">Recalled</option>
+                              </Select>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

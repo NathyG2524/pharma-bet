@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Brackets, type EntityManager, In, type Repository } from "typeorm";
 import { BranchTaxSetting } from "../../../entities/branch-tax-setting.entity";
-import { InventoryLot } from "../../../entities/inventory-lot.entity";
+import { InventoryLot, InventoryLotStatus } from "../../../entities/inventory-lot.entity";
 import {
   InventoryMovement,
   InventoryMovementReferenceType,
@@ -23,6 +23,7 @@ import { Medicine, MedicineStatus } from "../../../entities/medicine.entity";
 import { Patient } from "../../../entities/patient.entity";
 import { TaxCategory } from "../../../entities/tax-category.entity";
 import { isLotExpired } from "../../inventory/lot-expiry";
+import { BLOCKED_LOT_STATUSES } from "../../inventory/lot-status";
 import { saveLotWithRetry, saveOverlayWithRetry } from "../../inventory/lot-update";
 import { computeLineTax } from "../../taxes/tax-calculation";
 import type { AuthContext } from "../../tenancy/auth-context";
@@ -712,10 +713,25 @@ export class MedicinesService {
         .where("lot.tenantId = :tenantId", { tenantId: scope.tenantId })
         .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
         .andWhere("lot.medicineId = :medicineId", { medicineId })
+        .andWhere("lot.status = :status", { status: InventoryLotStatus.ACTIVE })
         .getRawOne<{ total: string | null }>();
       const available = Number(totalRow?.total ?? 0);
+      const blockedRow = await lotRepo
+        .createQueryBuilder("lot")
+        .select("SUM(lot.quantityOnHand)", "total")
+        .where("lot.tenantId = :tenantId", { tenantId: scope.tenantId })
+        .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
+        .andWhere("lot.medicineId = :medicineId", { medicineId })
+        .andWhere("lot.status IN (:...blocked)", {
+          blocked: Array.from(BLOCKED_LOT_STATUSES),
+        })
+        .getRawOne<{ total: string | null }>();
+      const blockedQuantity = Number(blockedRow?.total ?? 0);
       if (available > 0 && available < dto.quantity) {
         throw new ConflictException("Not enough stock");
+      }
+      if (available === 0 && blockedQuantity > 0) {
+        throw new ConflictException("Lot status blocks allocation");
       }
       if (available === 0 && overlay.stockQuantity < dto.quantity) {
         throw new ConflictException("Not enough stock");
@@ -729,6 +745,7 @@ export class MedicinesService {
             .andWhere("lot.branchId = :branchId", { branchId: scope.branchId })
             .andWhere("lot.medicineId = :medicineId", { medicineId })
             .andWhere("lot.quantityOnHand > 0")
+            .andWhere("lot.status = :status", { status: InventoryLotStatus.ACTIVE })
             .orderBy("lot.expiryDate", "ASC")
             .addOrderBy("lot.createdAt", "ASC")
             .setLock("pessimistic_write")

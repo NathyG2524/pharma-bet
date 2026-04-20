@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, type Repository } from "typeorm";
 import { Branch } from "../../entities/branch.entity";
-import { InventoryLot } from "../../entities/inventory-lot.entity";
+import { InventoryLot, InventoryLotStatus } from "../../entities/inventory-lot.entity";
 import {
   InventoryMovement,
   InventoryMovementReferenceType,
@@ -332,6 +332,11 @@ export class PurchaseOrdersService {
           },
           lock: { mode: "pessimistic_write" },
         });
+        if (lot?.status === InventoryLotStatus.RECALLED) {
+          throw new BadRequestException(
+            `Lot ${lot.lotCode} is recalled and cannot be received into stock.`,
+          );
+        }
         if (!lot) {
           lot = lotRepo.create({
             tenantId: scope.tenantId,

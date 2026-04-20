@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
-import { InventoryLot } from "../../entities/inventory-lot.entity";
+import { InventoryLot, type InventoryLotStatus } from "../../entities/inventory-lot.entity";
 import { Medicine } from "../../entities/medicine.entity";
+import { AuditEventsService } from "../audit-events/audit-events.service";
 import type { AuthContext } from "../tenancy/auth-context";
 import { isLotExpired } from "./lot-expiry";
+import { canTransitionLotStatus } from "./lot-status";
 
 type LotSummary = {
   id: string;
@@ -13,6 +15,7 @@ type LotSummary = {
   lotCode: string;
   expiryDate: string;
   unitCost: string;
+  status: InventoryLotStatus;
   quantityOnHand: number;
   isExpired: boolean;
 };
@@ -31,6 +34,8 @@ export class InventoryService {
     private readonly lotRepo: Repository<InventoryLot>,
     @InjectRepository(Medicine)
     private readonly medicineRepo: Repository<Medicine>,
+    @Inject(AuditEventsService)
+    private readonly auditEventsService: AuditEventsService,
   ) {}
 
   private getBranchScope(context: AuthContext) {
@@ -70,10 +75,58 @@ export class InventoryService {
       lotCode: lot.lotCode,
       expiryDate: lot.expiryDate,
       unitCost: lot.unitCost,
+      status: lot.status,
       quantityOnHand: lot.quantityOnHand,
       isExpired: isLotExpired(lot.expiryDate),
     }));
     return { items, total: items.length };
+  }
+
+  async updateLotStatus(
+    context: AuthContext,
+    lotId: string,
+    payload: { status: InventoryLotStatus; reason?: string | null },
+  ): Promise<LotSummary> {
+    const scope = this.getBranchScope(context);
+    const lot = await this.lotRepo.findOne({
+      where: { id: lotId, tenantId: scope.tenantId, branchId: scope.branchId },
+      relations: { medicine: true },
+    });
+    if (!lot) {
+      throw new NotFoundException(`Lot ${lotId} not found`);
+    }
+    const nextStatus = payload.status;
+    if (!canTransitionLotStatus(lot.status, nextStatus)) {
+      throw new BadRequestException("Recalled lots cannot be reactivated");
+    }
+    const previousStatus = lot.status;
+    lot.status = nextStatus;
+    const saved = await this.lotRepo.save(lot);
+    await this.auditEventsService.recordEvent({
+      tenantId: scope.tenantId,
+      actorUserId: context.userId ?? "unknown",
+      action: "inventory.lot.status_updated",
+      entityType: "inventory_lot",
+      entityId: saved.id,
+      metadata: {
+        previousStatus,
+        nextStatus,
+        reason: payload.reason ?? null,
+        medicineId: saved.medicineId,
+        lotCode: saved.lotCode,
+      },
+    });
+    return {
+      id: saved.id,
+      medicineId: saved.medicineId,
+      medicineName: saved.medicine?.name ?? "Unknown",
+      lotCode: saved.lotCode,
+      expiryDate: saved.expiryDate,
+      unitCost: saved.unitCost,
+      status: saved.status,
+      quantityOnHand: saved.quantityOnHand,
+      isExpired: isLotExpired(saved.expiryDate),
+    };
   }
 
   async getBranchValuation(context: AuthContext): Promise<{
