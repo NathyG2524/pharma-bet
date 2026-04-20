@@ -5,6 +5,7 @@ import { BranchesModule } from "./modules/branches/branches.module";
 import { MedicinesModule } from "./modules/medicines/medicines.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PatientsModule } from "./modules/patients/patients.module";
+import { PurchaseOrdersModule } from "./modules/purchase-orders/purchase-orders.module";
 import { SuppliersModule } from "./modules/suppliers/suppliers.module";
 import { TaxesModule } from "./modules/taxes/taxes.module";
 import { TenancyModule } from "./modules/tenancy/tenancy.module";
@@ -22,6 +23,7 @@ import { typeOrmConfig } from "./typeorm-config";
     MedicinesModule,
     NotificationsModule,
     SuppliersModule,
+    PurchaseOrdersModule,
     TaxesModule,
   ],
 })

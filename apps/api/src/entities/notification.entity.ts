@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
-
 @Entity({ name: "notifications" })
 @Index("IDX_notifications_user", ["tenantId", "userId"])
 @Index("IDX_notifications_event", ["tenantId", "userId", "eventKey"], { unique: true })

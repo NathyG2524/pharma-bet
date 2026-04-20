@@ -23,6 +23,17 @@ export type {
   SellMedicineInput,
 } from "./types/medicine";
 export type {
+  CreatePurchaseOrderInput,
+  PurchaseOrderDecisionInput,
+  PurchaseOrderDto,
+  PurchaseOrderEventDto,
+  PurchaseOrderLineInput,
+  PurchaseOrderLineDto,
+  PurchaseOrderListResponse,
+  PurchaseOrderStatus,
+  UpdatePurchaseOrderInput,
+} from "./types/purchasing";
+export type {
   BranchDto,
   CreateBranchInput,
   CreateTenantInput,
@@ -62,7 +73,8 @@ export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
-export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
 export { SuppliersApi, suppliersApi } from "./lib/suppliersApi";
+export { PurchaseOrdersApi, purchaseOrdersApi } from "./lib/purchaseOrdersApi";
+export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
 export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";

@@ -52,6 +52,15 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
 
+const purchasingLinks: NavItem[] = [
+  { href: "/purchase-orders", label: "Purchase orders", icon: ClipboardList },
+  { href: "/suppliers", label: "Suppliers", icon: Users },
+];
+
+const branchPurchasingLinks: NavItem[] = [
+  { href: "/purchase-orders/approvals", label: "PO approvals", icon: ClipboardList },
+];
+
 const orgLinks: NavItem[] = [
   { href: "/organization", label: "Branches & access", icon: Users },
   { href: "/audit", label: "Audit log", icon: ScrollText },
@@ -94,6 +103,7 @@ export function AppSidebar() {
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
   const visibleInventoryLinks = isHqUser ? inventoryLinks : branchInventoryLinks;
+  const visiblePurchasingLinks = isHqUser ? purchasingLinks : branchPurchasingLinks;
 
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">
@@ -136,6 +146,17 @@ export function AppSidebar() {
           </p>
           <div className="space-y-1">
             {visibleInventoryLinks.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant mb-2">
+            Purchasing
+          </p>
+          <div className="space-y-1">
+            {visiblePurchasingLinks.map((item) => (
               <NavLink key={item.href} {...item} />
             ))}
           </div>
