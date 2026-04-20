@@ -2,7 +2,16 @@
 
 import { medicinesApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input } from "@drug-store/ui";
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Select,
+} from "@drug-store/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +25,7 @@ export default function NewMedicinePage() {
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
   const [unit, setUnit] = useState("");
+  const [requiresPatient, setRequiresPatient] = useState("false");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -38,6 +48,7 @@ export default function NewMedicinePage() {
         name: name.trim(),
         sku: sku.trim() || undefined,
         unit: unit.trim() || undefined,
+        requiresPatient: requiresPatient === "true",
       });
       router.push(`/inventory/${m.id}`);
     } catch (err) {
@@ -98,6 +109,23 @@ export default function NewMedicinePage() {
                 onChange={(e) => setUnit(e.target.value)}
                 disabled={loading || !isHqUser}
               />
+            </div>
+            <div>
+              <label
+                htmlFor="requires-patient"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Patient required on sale
+              </label>
+              <Select
+                id="requires-patient"
+                value={requiresPatient}
+                onChange={(e) => setRequiresPatient(e.target.value)}
+                disabled={loading || !isHqUser}
+              >
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </Select>
             </div>
             {error && <Alert variant="destructive">{error}</Alert>}
             <div className="flex gap-2">

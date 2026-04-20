@@ -47,6 +47,7 @@ type MedicineReadModel = {
   unit: string | null;
   barcode: string | null;
   isActive: boolean;
+  requiresPatient: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
   taxCategoryId: string | null;
@@ -162,6 +163,7 @@ export class MedicinesService {
       unit: medicine.unit,
       barcode: medicine.barcode,
       isActive: medicine.isActive,
+      requiresPatient: medicine.requiresPatient,
       status: medicine.status,
       draftBranchId: medicine.draftBranchId,
       taxCategoryId: medicine.taxCategoryId,
@@ -331,6 +333,7 @@ export class MedicinesService {
       unit: dto.unit?.trim() || null,
       barcode: dto.barcode?.trim() || null,
       isActive: true,
+      requiresPatient: dto.requiresPatient ?? false,
       status: MedicineStatus.CANONICAL,
       draftBranchId: null,
       taxCategoryId: taxCategoryId ?? null,
@@ -357,6 +360,7 @@ export class MedicinesService {
       unit: dto.unit?.trim() || null,
       barcode: dto.barcode?.trim() || null,
       isActive: true,
+      requiresPatient: dto.requiresPatient ?? false,
       status: MedicineStatus.DRAFT,
       draftBranchId: scope.branchId,
       taxCategoryId: taxCategoryId ?? null,
@@ -482,6 +486,9 @@ export class MedicinesService {
     if (dto.taxCategoryId !== undefined) {
       const taxCategoryId = await this.resolveTaxCategoryId(scope.tenantId, dto.taxCategoryId);
       medicine.taxCategoryId = taxCategoryId ?? null;
+    }
+    if (dto.requiresPatient !== undefined) {
+      medicine.requiresPatient = dto.requiresPatient;
     }
     return this.medicineRepo.save(medicine);
   }

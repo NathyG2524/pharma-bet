@@ -111,6 +111,16 @@ export default function SellPage() {
     () => lineTotals.reduce((sum, value) => sum + value, 0),
     [lineTotals],
   );
+  const requiresPatient = useMemo(
+    () =>
+      lines.some((line) => {
+        if (!line.medicineId) return false;
+        const medicine = medicines.find((m) => m.id === line.medicineId);
+        return medicine?.requiresPatient ?? false;
+      }),
+    [lines, medicines],
+  );
+  const isPatientMissing = requiresPatient && !patientId;
 
   const handleLookupPatient = async () => {
     setLookupError(null);
@@ -188,6 +198,10 @@ export default function SellPage() {
     setSuccess(null);
     setLastSale(null);
     if (!lines.length || hasInvalidLine) return;
+    if (isPatientMissing) {
+      setError("Patient is required for the selected medicine(s).");
+      return;
+    }
     setLoading(true);
     try {
       const iso = parseLocalDateTime(recordedAt);
@@ -277,7 +291,9 @@ export default function SellPage() {
                           >
                             {medicines.map((m) => (
                               <option key={m.id} value={m.id}>
-                                {m.name} (stock: {m.stockQuantity})
+                                {`${m.name} (stock: ${m.stockQuantity}${
+                                  m.requiresPatient ? ", patient required" : ""
+                                })`}
                               </option>
                             ))}
                           </Select>
@@ -354,7 +370,7 @@ export default function SellPage() {
 
             <div className="rounded-lg bg-surface_container_low p-4">
               <p className="mb-2 text-sm font-medium text-on_surface_variant">
-                Patient (optional — walk-in if empty)
+                Patient {requiresPatient ? "(required for selected items)" : "(optional — walk-in)"}
               </p>
               {patientLabel ? (
                 <div className="flex flex-wrap items-center gap-2">
@@ -384,6 +400,11 @@ export default function SellPage() {
                   </div>
                   {lookupError && <p className="mt-2 text-sm text-tertiary">{lookupError}</p>}
                 </>
+              )}
+              {isPatientMissing && (
+                <Alert variant="destructive" className="mt-3">
+                  Patient is required for the selected medicine(s).
+                </Alert>
               )}
             </div>
 
@@ -435,7 +456,10 @@ export default function SellPage() {
               </Alert>
             )}
             <div className="flex gap-2">
-              <Button type="submit" disabled={loading || !medicines.length || hasInvalidLine}>
+              <Button
+                type="submit"
+                disabled={loading || !medicines.length || hasInvalidLine || isPatientMissing}
+              >
                 {loading ? "Saving…" : "Record sale"}
               </Button>
               <Link href="/inventory">

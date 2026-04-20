@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Select,
 } from "@drug-store/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +26,7 @@ export default function NewDraftMedicinePage() {
   const [sku, setSku] = useState("");
   const [unit, setUnit] = useState("");
   const [barcode, setBarcode] = useState("");
+  const [requiresPatient, setRequiresPatient] = useState("false");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -77,6 +79,7 @@ export default function NewDraftMedicinePage() {
         sku: sku.trim() || undefined,
         unit: unit.trim() || undefined,
         barcode: barcode.trim() || undefined,
+        requiresPatient: requiresPatient === "true",
       });
       router.push(`/inventory/${m.id}`);
     } catch (err) {
@@ -152,6 +155,23 @@ export default function NewDraftMedicinePage() {
                 onChange={(e) => setBarcode(e.target.value)}
                 disabled={loading || !isBranchUser}
               />
+            </div>
+            <div>
+              <label
+                htmlFor="requires-patient"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                Patient required on sale
+              </label>
+              <Select
+                id="requires-patient"
+                value={requiresPatient}
+                onChange={(e) => setRequiresPatient(e.target.value)}
+                disabled={loading || !isBranchUser}
+              >
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </Select>
             </div>
 
             {dedupeHints.length > 0 && (

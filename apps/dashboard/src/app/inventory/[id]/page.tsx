@@ -67,6 +67,7 @@ export default function MedicineDetailPage() {
   const [catalogSku, setCatalogSku] = useState("");
   const [catalogUnit, setCatalogUnit] = useState("");
   const [catalogActive, setCatalogActive] = useState("true");
+  const [catalogRequiresPatient, setCatalogRequiresPatient] = useState("false");
   const [catalogSaving, setCatalogSaving] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogSuccess, setCatalogSuccess] = useState<string | null>(null);
@@ -151,6 +152,7 @@ export default function MedicineDetailPage() {
     setCatalogSku(canonical.sku ?? "");
     setCatalogUnit(canonical.unit ?? "");
     setCatalogActive(canonical.isActive ? "true" : "false");
+    setCatalogRequiresPatient(canonical.requiresPatient ? "true" : "false");
   }, [canonical]);
 
   useEffect(() => {
@@ -256,6 +258,7 @@ export default function MedicineDetailPage() {
         sku: catalogSku.trim() || null,
         unit: catalogUnit.trim() || null,
         isActive: catalogActive === "true",
+        requiresPatient: catalogRequiresPatient === "true",
       });
       setCatalogItem(updated);
       setMedicine((prev) => (prev ? { ...prev, ...updated, isActive: updated.isActive } : prev));
@@ -452,6 +455,23 @@ export default function MedicineDetailPage() {
                 >
                   <option value="true">Active</option>
                   <option value="false">Inactive</option>
+                </Select>
+              </div>
+              <div>
+                <label
+                  htmlFor="catalog-requires-patient"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  Patient required on sale
+                </label>
+                <Select
+                  id="catalog-requires-patient"
+                  value={catalogRequiresPatient}
+                  onChange={(e) => setCatalogRequiresPatient(e.target.value)}
+                  disabled={catalogSaving}
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
                 </Select>
               </div>
               {catalogError && <Alert variant="destructive">{catalogError}</Alert>}

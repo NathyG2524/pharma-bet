@@ -42,6 +42,9 @@ export class Medicine {
   @Column({ type: "boolean", default: true })
   isActive: boolean;
 
+  @Column({ type: "boolean", default: false })
+  requiresPatient: boolean;
+
   @Column({
     type: "enum",
     enum: MedicineStatus,

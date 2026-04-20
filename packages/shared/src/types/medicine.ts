@@ -7,6 +7,7 @@ export interface MedicineDto {
   unit: string | null;
   barcode: string | null;
   isActive: boolean;
+  requiresPatient: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
   taxCategoryId: string | null;
@@ -27,6 +28,7 @@ export interface CanonicalMedicineDto {
   unit: string | null;
   barcode: string | null;
   isActive: boolean;
+  requiresPatient: boolean;
   status: MedicineStatus;
   draftBranchId: string | null;
   taxCategoryId: string | null;
@@ -77,6 +79,7 @@ export interface CreateMedicineInput {
   unit?: string;
   barcode?: string;
   taxCategoryId?: string;
+  requiresPatient?: boolean;
 }
 
 export interface CreateDraftMedicineInput {
@@ -85,6 +88,7 @@ export interface CreateDraftMedicineInput {
   unit?: string;
   barcode?: string;
   taxCategoryId?: string;
+  requiresPatient?: boolean;
 }
 
 export interface DedupeHintDto {
@@ -107,6 +111,7 @@ export interface UpdateMedicineInput {
   unit?: string | null;
   isActive?: boolean;
   taxCategoryId?: string | null;
+  requiresPatient?: boolean;
 }
 
 export interface UpdateMedicineOverlayInput {

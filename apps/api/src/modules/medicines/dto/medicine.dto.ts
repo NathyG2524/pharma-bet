@@ -40,6 +40,11 @@ export class CreateMedicineDto {
   @IsOptional()
   @IsUUID()
   taxCategoryId?: string;
+
+  @ApiPropertyOptional({ description: "Requires patient on sale" })
+  @IsOptional()
+  @IsBoolean()
+  requiresPatient?: boolean;
 }
 
 export class CreateDraftMedicineDto {
@@ -71,6 +76,11 @@ export class CreateDraftMedicineDto {
   @IsOptional()
   @IsUUID()
   taxCategoryId?: string;
+
+  @ApiPropertyOptional({ description: "Requires patient on sale" })
+  @IsOptional()
+  @IsBoolean()
+  requiresPatient?: boolean;
 }
 
 export class DedupeCheckQueryDto {
@@ -121,6 +131,11 @@ export class UpdateMedicineDto {
   @IsOptional()
   @IsUUID()
   taxCategoryId?: string | null;
+
+  @ApiPropertyOptional({ description: "Requires patient on sale" })
+  @IsOptional()
+  @IsBoolean()
+  requiresPatient?: boolean;
 }
 
 export class UpdateMedicineOverlayDto {

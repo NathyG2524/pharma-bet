@@ -36,6 +36,7 @@ import {
   computeLineTotals,
   sumDecimalStrings,
 } from "./sales-calculation";
+import { requiresPatientForSale } from "./sales-validation";
 
 const OVERRIDE_ROLES = new Set<UserRole>([
   UserRole.BRANCH_MANAGER,
@@ -287,6 +288,9 @@ export class SalesService {
           `Medicine "${medicine.name}" is a draft product owned by another branch`,
         );
       }
+    }
+    if (!dto.patientId && requiresPatientForSale(medicines)) {
+      throw new BadRequestException("Patient is required for selected medicines.");
     }
 
     const overrideEvents: AuditEventInput[] = [];
