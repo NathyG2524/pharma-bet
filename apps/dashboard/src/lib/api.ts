@@ -10,6 +10,7 @@ import {
   purchaseOrdersApi,
   salesApi,
   stockCountsApi,
+  supplierReturnsApi,
   suppliersApi,
   taxesApi,
   tenantsApi,
@@ -40,6 +41,7 @@ if (apiUrl) {
   adjustmentsApi.configure(options);
   stockCountsApi.configure(options);
   approvalsApi.configure(options);
+  supplierReturnsApi.configure(options);
 }
 
 export {
@@ -58,4 +60,5 @@ export {
   adjustmentsApi,
   stockCountsApi,
   approvalsApi,
+  supplierReturnsApi,
 };

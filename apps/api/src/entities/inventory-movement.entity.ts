@@ -15,6 +15,7 @@ export enum InventoryMovementType {
   RECEIPT = "RECEIPT",
   ADJUSTMENT = "ADJUSTMENT",
   STOCK_COUNT_VARIANCE = "STOCK_COUNT_VARIANCE",
+  SUPPLIER_RETURN = "SUPPLIER_RETURN",
 }
 
 export enum InventoryMovementReferenceType {
@@ -22,6 +23,7 @@ export enum InventoryMovementReferenceType {
   MANUAL_RECEIPT = "MANUAL_RECEIPT",
   INVENTORY_ADJUSTMENT = "INVENTORY_ADJUSTMENT",
   STOCK_COUNT_VARIANCE = "STOCK_COUNT_VARIANCE",
+  SUPPLIER_RETURN = "SUPPLIER_RETURN",
 }
 
 @Entity({ name: "inventory_movements" })
