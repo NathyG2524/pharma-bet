@@ -107,8 +107,11 @@ export class ApprovalsService {
       }
       breakGlassReason = dto.breakGlass.reason.trim();
       breakGlassExpiresAt = new Date(dto.breakGlass.expiresAt);
-      if (Number.isNaN(breakGlassExpiresAt.getTime()) || breakGlassExpiresAt <= new Date()) {
-        throw new BadRequestException("Break-glass expiresAt must be a future timestamp");
+      if (Number.isNaN(breakGlassExpiresAt.getTime())) {
+        throw new BadRequestException("Break-glass expiresAt must be a valid timestamp");
+      }
+      if (breakGlassExpiresAt <= new Date()) {
+        throw new BadRequestException("Break-glass expiresAt must be in the future");
       }
     }
 
@@ -166,7 +169,7 @@ export class ApprovalsService {
       branchId: approval.branchId,
       recipientUserIds,
       title: "Approval requested",
-      body: `${approval.domainType} ${approval.domainId} is awaiting BM + HQ approval.`,
+      body: `${approval.domainType} ${approval.domainId} is awaiting Branch Manager and HQ approval.`,
       link: `/approvals/${approval.id}`,
       eventType: "approval_requested",
       eventKey: `approval:${approval.id}:submitted`,
