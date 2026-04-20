@@ -13,7 +13,7 @@ import { Tenant } from "./tenant.entity";
 @Index("IDX_audit_events_tenant_created", ["tenantId", "createdAt"])
 @Index("IDX_audit_events_tenant_entity", ["tenantId", "entityType"])
 @Index("IDX_audit_events_tenant_patient", ["tenantId", "patientId"])
-@Index("IDX_audit_events_tenant_actor", ["tenantId", "actorUserId"])
+@Index("IDX_audit_events_tenant_user", ["tenantId", "userId"])
 export class AuditEvent {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -29,7 +29,7 @@ export class AuditEvent {
   branchId: string | null;
 
   @Column({ type: "varchar" })
-  actorUserId: string;
+  userId: string;
 
   @Column({ type: "varchar" })
   action: string;

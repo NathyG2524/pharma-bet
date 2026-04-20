@@ -3,6 +3,7 @@ import {
   branchesApi,
   medicinesApi,
   patientsApi,
+  taxesApi,
   tenantsApi,
 } from "@drug-store/shared";
 import { getAuthHeaders } from "./auth-storage";
@@ -20,6 +21,7 @@ if (apiUrl) {
   branchesApi.configure(options);
   tenantsApi.configure(options);
   auditEventsApi.configure(options);
+  taxesApi.configure(options);
 }
 
-export { patientsApi, medicinesApi, branchesApi, tenantsApi, auditEventsApi };
+export { patientsApi, medicinesApi, branchesApi, tenantsApi, auditEventsApi, taxesApi };

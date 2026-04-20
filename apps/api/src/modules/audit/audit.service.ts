@@ -22,7 +22,7 @@ export class AuditService {
     const event = this.auditRepo.create({
       tenantId: context.tenantId,
       branchId: context.activeBranchId ?? null,
-      actorUserId: context.userId,
+      userId: context.userId,
       action,
       entityType: "patient",
       entityId: patientId,
