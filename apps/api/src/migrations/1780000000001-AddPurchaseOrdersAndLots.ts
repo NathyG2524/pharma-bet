@@ -1,52 +1,27 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddPurchaseOrdersAndLots1780000000000 implements MigrationInterface {
-  name = "AddPurchaseOrdersAndLots1780000000000";
+export class AddPurchaseOrdersAndLots1780000000001 implements MigrationInterface {
+  name = "AddPurchaseOrdersAndLots1780000000001";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // This migration only adds receipt/lot/movement tables.
+    // Purchase-order core tables + purchase_order_status_enum are created by the purchasing workflow migration.
     await queryRunner.query(`
-      CREATE TYPE "purchase_order_status_enum" AS ENUM ('DRAFT', 'APPROVED', 'RECEIVED')
+      DO $$
+      BEGIN
+        CREATE TYPE "inventory_movement_type_enum" AS ENUM ('RECEIPT');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
     await queryRunner.query(`
-      CREATE TYPE "inventory_movement_type_enum" AS ENUM ('RECEIPT')
+      DO $$
+      BEGIN
+        CREATE TYPE "inventory_movement_reference_enum" AS ENUM ('PURCHASE_ORDER_RECEIPT', 'MANUAL_RECEIPT');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
-    await queryRunner.query(`
-      CREATE TYPE "inventory_movement_reference_enum" AS ENUM ('PURCHASE_ORDER_RECEIPT', 'MANUAL_RECEIPT')
-    `);
-
-    await queryRunner.query(`
-      CREATE TABLE "purchase_orders" (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-        "tenantId" uuid NOT NULL,
-        "branchId" uuid NOT NULL,
-        "orderNumber" character varying,
-        "status" "purchase_order_status_enum" NOT NULL DEFAULT 'DRAFT',
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_purchase_orders" PRIMARY KEY ("id"),
-        CONSTRAINT "FK_purchase_orders_branch" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE CASCADE
-      )
-    `);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_purchase_orders_tenant_branch" ON "purchase_orders" ("tenantId", "branchId")`,
-    );
-
-    await queryRunner.query(`
-      CREATE TABLE "purchase_order_lines" (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-        "purchaseOrderId" uuid NOT NULL,
-        "medicineId" uuid NOT NULL,
-        "orderedQuantity" integer NOT NULL,
-        "unitCost" numeric(14,4),
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_purchase_order_lines" PRIMARY KEY ("id"),
-        CONSTRAINT "FK_purchase_order_lines_po" FOREIGN KEY ("purchaseOrderId") REFERENCES "purchase_orders"("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_purchase_order_lines_medicine" FOREIGN KEY ("medicineId") REFERENCES "medicines"("id") ON DELETE CASCADE
-      )
-    `);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_purchase_order_lines_po" ON "purchase_order_lines" ("purchaseOrderId")`,
-    );
 
     await queryRunner.query(`
       CREATE TABLE "purchase_order_receipts" (
@@ -150,12 +125,7 @@ export class AddPurchaseOrdersAndLots1780000000000 implements MigrationInterface
     await queryRunner.query(`DROP INDEX "IDX_purchase_order_receipts_po"`);
     await queryRunner.query(`DROP INDEX "UQ_purchase_order_receipts_key"`);
     await queryRunner.query(`DROP TABLE "purchase_order_receipts"`);
-    await queryRunner.query(`DROP INDEX "IDX_purchase_order_lines_po"`);
-    await queryRunner.query(`DROP TABLE "purchase_order_lines"`);
-    await queryRunner.query(`DROP INDEX "IDX_purchase_orders_tenant_branch"`);
-    await queryRunner.query(`DROP TABLE "purchase_orders"`);
     await queryRunner.query(`DROP TYPE "inventory_movement_reference_enum"`);
     await queryRunner.query(`DROP TYPE "inventory_movement_type_enum"`);
-    await queryRunner.query(`DROP TYPE "purchase_order_status_enum"`);
   }
 }
