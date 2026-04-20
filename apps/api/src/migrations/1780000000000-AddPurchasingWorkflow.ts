@@ -4,30 +4,42 @@ export class AddPurchasingWorkflow1780000000000 implements MigrationInterface {
   name = "AddPurchasingWorkflow1780000000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Guarded because other migrations may have already created these objects.
     await queryRunner.query(`
-      CREATE TYPE "purchase_order_status_enum" AS ENUM (
-        'draft',
-        'pending_approval',
-        'approved',
-        'rejected',
-        'changes_requested'
-      )
+      DO $$
+      BEGIN
+        CREATE TYPE "purchase_order_status_enum" AS ENUM (
+          'draft',
+          'pending_approval',
+          'approved',
+          'rejected',
+          'changes_requested'
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
+
+    // Suppliers may be created by AddSuppliersAndMappings; create only if missing.
     await queryRunner.query(`
-      CREATE TABLE "suppliers" (
+      CREATE TABLE IF NOT EXISTS "suppliers" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "tenantId" uuid NOT NULL,
         "name" character varying NOT NULL,
-        "email" character varying,
-        "phone" character varying,
+        "contactEmail" character varying,
+        "contactPhone" character varying,
+        "address" character varying,
+        "notes" text,
         "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_suppliers" PRIMARY KEY ("id"),
-        CONSTRAINT "FK_suppliers_tenant" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE
+        CONSTRAINT "PK_suppliers" PRIMARY KEY ("id")
       )
     `);
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "UQ_suppliers_tenant_name" ON "suppliers" ("tenantId", "name")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "UQ_suppliers_tenant_name" ON "suppliers" ("tenantId", "name")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_suppliers_tenant" ON "suppliers" ("tenantId")`,
     );
 
     await queryRunner.query(`
@@ -95,32 +107,9 @@ export class AddPurchasingWorkflow1780000000000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "IDX_purchase_order_events_tenant" ON "purchase_order_events" ("tenantId")`,
     );
-
-    await queryRunner.query(`
-      CREATE TABLE "notifications" (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-        "tenantId" uuid NOT NULL,
-        "branchId" uuid NOT NULL,
-        "type" character varying NOT NULL,
-        "title" character varying NOT NULL,
-        "message" text NOT NULL,
-        "entityId" uuid,
-        "readAt" TIMESTAMP WITH TIME ZONE,
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_notifications" PRIMARY KEY ("id"),
-        CONSTRAINT "FK_notifications_tenant" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_notifications_branch" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE CASCADE
-      )
-    `);
-    await queryRunner.query(
-      `CREATE INDEX "IDX_notifications_tenant_branch" ON "notifications" ("tenantId", "branchId")`,
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX "IDX_notifications_tenant_branch"`);
-    await queryRunner.query(`DROP TABLE "notifications"`);
-
     await queryRunner.query(`DROP INDEX "IDX_purchase_order_events_tenant"`);
     await queryRunner.query(`DROP INDEX "IDX_purchase_order_events_po"`);
     await queryRunner.query(`DROP TABLE "purchase_order_events"`);
@@ -132,9 +121,6 @@ export class AddPurchasingWorkflow1780000000000 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX "IDX_purchase_orders_tenant_status"`);
     await queryRunner.query(`DROP INDEX "IDX_purchase_orders_tenant_branch"`);
     await queryRunner.query(`DROP TABLE "purchase_orders"`);
-
-    await queryRunner.query(`DROP INDEX "UQ_suppliers_tenant_name"`);
-    await queryRunner.query(`DROP TABLE "suppliers"`);
     await queryRunner.query(`DROP TYPE "purchase_order_status_enum"`);
   }
 }
