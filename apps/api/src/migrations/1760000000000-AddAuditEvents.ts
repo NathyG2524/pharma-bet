@@ -11,11 +11,21 @@ export class AddAuditEvents1760000000000 implements MigrationInterface {
         "branchId" uuid,
         "userId" character varying NOT NULL,
         "action" character varying NOT NULL,
-        "patientId" uuid NOT NULL,
+        "entityType" character varying NOT NULL,
+        "entityId" character varying NOT NULL,
+        "patientId" uuid,
+        "metadata" jsonb NOT NULL DEFAULT '{}'::jsonb,
         "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_audit_events" PRIMARY KEY ("id")
+        CONSTRAINT "PK_audit_events" PRIMARY KEY ("id"),
+        CONSTRAINT "FK_audit_events_tenant" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE
       )
     `);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_audit_events_tenant_created" ON "audit_events" ("tenantId", "createdAt")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_audit_events_tenant_entity" ON "audit_events" ("tenantId", "entityType")`,
+    );
     await queryRunner.query(
       `CREATE INDEX "IDX_audit_events_tenant_patient" ON "audit_events" ("tenantId", "patientId")`,
     );
@@ -27,6 +37,8 @@ export class AddAuditEvents1760000000000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_user"`);
     await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_patient"`);
+    await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_entity"`);
+    await queryRunner.query(`DROP INDEX "IDX_audit_events_tenant_created"`);
     await queryRunner.query(`DROP TABLE "audit_events"`);
   }
 }

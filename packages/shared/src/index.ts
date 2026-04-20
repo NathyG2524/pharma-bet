@@ -32,6 +32,12 @@ export type {
   UserRole,
 } from "./types/tenancy";
 export type {
+  AuditEventDto,
+  AuditEventListResponse,
+  AuditEventMetadata,
+  ListAuditEventsInput,
+} from "./types/audit";
+export type {
   BranchTaxSettingsDto,
   CreateTaxCategoryInput,
   TaxCategoryDto,
@@ -41,4 +47,5 @@ export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
+export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";

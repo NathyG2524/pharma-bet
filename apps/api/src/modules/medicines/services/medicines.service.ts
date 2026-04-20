@@ -141,7 +141,6 @@ export class MedicinesService {
     const rate = await this.resolveTaxRate(manager, scope, medicine);
     return computeLineTax({ quantity, unitPrice, taxRate: rate });
   }
-
   private buildReadModel(medicine: Medicine, overlay?: MedicineOverlay | null): MedicineReadModel {
     return {
       id: medicine.id,

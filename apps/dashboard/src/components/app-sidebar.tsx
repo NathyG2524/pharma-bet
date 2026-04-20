@@ -8,6 +8,7 @@ import {
   LineChart,
   PackagePlus,
   Pill,
+  ScrollText,
   Search,
   ShoppingCart,
   Stethoscope,
@@ -45,7 +46,10 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
 ];
 
-const orgLinks: NavItem[] = [{ href: "/organization", label: "Branches & access", icon: Users }];
+const orgLinks: NavItem[] = [
+  { href: "/organization", label: "Branches & access", icon: Users },
+  { href: "/audit", label: "Audit log", icon: ScrollText },
+];
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";

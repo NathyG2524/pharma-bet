@@ -7,8 +7,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { InjectRepository } from "@nestjs/typeorm";
-import type { Repository } from "typeorm";
+import { DataSource } from "typeorm";
 import { UserMembership, UserRole } from "../../entities/user-membership.entity";
 import type { RequestWithAuth } from "./auth-context";
 import { ALLOW_TENANTLESS_KEY } from "./auth.decorators";
@@ -18,8 +17,8 @@ export class AuthGuard implements CanActivate {
   constructor(
     @Inject(Reflector)
     private readonly reflector: Reflector,
-    @InjectRepository(UserMembership)
-    private readonly membershipRepo: Repository<UserMembership>,
+    @Inject(DataSource)
+    private readonly dataSource: DataSource,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -48,7 +47,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException("Missing tenant context");
     }
 
-    const memberships = await this.membershipRepo.find({
+    const membershipRepo = this.dataSource.getRepository(UserMembership);
+    const memberships = await membershipRepo.find({
       where: { tenantId: auth.tenantId, userId: auth.userId },
     });
 

@@ -59,7 +59,6 @@ export class Medicine {
   @ManyToOne(() => TaxCategory, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "taxCategoryId" })
   taxCategory: TaxCategory | null;
-
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
