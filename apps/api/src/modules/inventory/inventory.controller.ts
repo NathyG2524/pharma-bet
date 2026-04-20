@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Inject, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "../../entities/user-membership.entity";
 import type { AuthContext } from "../tenancy/auth-context";
 import { AuthContextParam, Roles } from "../tenancy/auth.decorators";
 import { AuthGuard } from "../tenancy/auth.guard";
 import { BranchGuard } from "../tenancy/branch.guard";
 import { HQ_ROLES } from "../tenancy/role-utils";
 import { RolesGuard } from "../tenancy/roles.guard";
+import type { InventoryReportQueryDto } from "./dto/inventory-report-query.dto";
 import type { UpdateLotStatusDto } from "./dto/update-lot-status.dto";
 import { InventoryService } from "./inventory.service";
 
@@ -32,6 +34,45 @@ export class InventoryController {
   @UseGuards(BranchGuard)
   async valuation(@AuthContextParam() context: AuthContext) {
     return this.inventoryService.getBranchValuation(context);
+  }
+
+  @Get("reports/expiry-horizon")
+  @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES)
+  @ApiQuery({ name: "branchId", required: false })
+  @ApiQuery({ name: "startDate", required: false, description: "ISO date/time filter start" })
+  @ApiQuery({ name: "endDate", required: false, description: "ISO date/time filter end" })
+  async expiryHorizonReport(
+    @AuthContextParam() context: AuthContext,
+    @Query() query: InventoryReportQueryDto,
+  ) {
+    return this.inventoryService.getExpiryHorizonReport(context, query);
+  }
+
+  @Get("reports/stock-valuation")
+  @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES)
+  @ApiQuery({ name: "branchId", required: false })
+  @ApiQuery({ name: "startDate", required: false, description: "ISO date/time filter start" })
+  @ApiQuery({ name: "endDate", required: false, description: "ISO date/time filter end" })
+  async stockValuationReport(
+    @AuthContextParam() context: AuthContext,
+    @Query() query: InventoryReportQueryDto,
+  ) {
+    return this.inventoryService.getStockValuationReport(context, query);
+  }
+
+  @Get("reports/exceptions")
+  @UseGuards(RolesGuard)
+  @Roles(...HQ_ROLES, UserRole.BRANCH_MANAGER)
+  @ApiQuery({ name: "branchId", required: false })
+  @ApiQuery({ name: "startDate", required: false, description: "ISO date/time filter start" })
+  @ApiQuery({ name: "endDate", required: false, description: "ISO date/time filter end" })
+  async exceptionsReport(
+    @AuthContextParam() context: AuthContext,
+    @Query() query: InventoryReportQueryDto,
+  ) {
+    return this.inventoryService.getExceptionsReport(context, query);
   }
 
   @Get("org-on-hand")
