@@ -1,4 +1,10 @@
-export type InventoryLotStatus = "ACTIVE" | "QUARANTINE" | "RECALLED";
+export const InventoryLotStatus = {
+  ACTIVE: "ACTIVE",
+  QUARANTINE: "QUARANTINE",
+  RECALLED: "RECALLED",
+} as const;
+
+export type InventoryLotStatus = (typeof InventoryLotStatus)[keyof typeof InventoryLotStatus];
 
 export interface InventoryLotDto {
   id: string;

@@ -42,11 +42,12 @@ export type {
 export type {
   InventoryLotDto,
   InventoryLotListResponse,
-  InventoryLotStatus,
+  InventoryLotStatus as InventoryLotStatusType,
   InventoryValuationLineDto,
   InventoryValuationResponse,
   UpdateLotStatusRequest,
 } from "./types/inventory";
+export { InventoryLotStatus } from "./types/inventory";
 export type {
   BranchDto,
   CreateBranchInput,

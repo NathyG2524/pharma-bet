@@ -2,10 +2,11 @@
 
 import { inventoryApi, medicinesApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { InventoryLotStatus } from "@drug-store/shared";
 import type {
   CanonicalMedicineDto,
   InventoryLotDto,
-  InventoryLotStatus,
+  InventoryLotStatusType,
   MedicineDto,
   MedicineTransactionDto,
 } from "@drug-store/shared";
@@ -176,7 +177,7 @@ export default function MedicineDetailPage() {
     }
   };
 
-  const handleLotStatusChange = async (lotId: string, status: InventoryLotStatus) => {
+  const handleLotStatusChange = async (lotId: string, status: InventoryLotStatusType) => {
     if (!isHqUser) return;
     setLotStatusError(null);
     setLotStatusUpdating((prev) => ({ ...prev, [lotId]: true }));
@@ -190,18 +191,19 @@ export default function MedicineDetailPage() {
     }
   };
 
-  const isLotStatusChangeDisabled = (lot: InventoryLotDto) => lot.status === "RECALLED";
+  const isLotStatusChangeDisabled = (lot: InventoryLotDto) =>
+    lot.status === InventoryLotStatus.RECALLED;
 
   const getLotStatusLabel = (lot: InventoryLotDto) => {
-    if (lot.status === "RECALLED") return "Recalled";
-    if (lot.status === "QUARANTINE") return "Quarantined";
+    if (lot.status === InventoryLotStatus.RECALLED) return "Recalled";
+    if (lot.status === InventoryLotStatus.QUARANTINE) return "Quarantined";
     if (lot.isExpired) return "Expired";
     return "Active";
   };
 
   const getLotStatusVariant = (lot: InventoryLotDto) => {
-    if (lot.status === "RECALLED") return "destructive";
-    if (lot.status === "QUARANTINE") return "warning";
+    if (lot.status === InventoryLotStatus.RECALLED) return "destructive";
+    if (lot.status === InventoryLotStatus.QUARANTINE) return "warning";
     if (lot.isExpired) return "warning";
     return "success";
   };
@@ -656,7 +658,11 @@ export default function MedicineDetailPage() {
             <CardTitle>Lots on hand</CardTitle>
           </CardHeader>
           <CardContent>
-            {lotStatusError && <Alert variant="destructive">{lotStatusError}</Alert>}
+            {lotStatusError && (
+              <Alert variant="destructive" role="alert" aria-live="assertive">
+                {lotStatusError}
+              </Alert>
+            )}
             {lotsLoading ? (
               <p className="text-sm text-gray-500">Loading lots…</p>
             ) : lots.length === 0 ? (
@@ -704,7 +710,7 @@ export default function MedicineDetailPage() {
                                 onChange={(e) =>
                                   handleLotStatusChange(
                                     lot.id,
-                                    e.target.value as InventoryLotStatus,
+                                    e.target.value as InventoryLotStatusType,
                                   )
                                 }
                                 disabled={

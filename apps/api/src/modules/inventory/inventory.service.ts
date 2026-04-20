@@ -111,6 +111,10 @@ export class InventoryService {
     const previousStatus = lot.status;
     lot.status = nextStatus;
     const saved = await this.lotRepo.save(lot);
+    const medicineName = saved.medicine?.name;
+    if (!medicineName) {
+      throw new NotFoundException(`Medicine for lot ${saved.id} not found`);
+    }
     await this.auditEventsService.recordEvent({
       tenantId: scope.tenantId,
       actorUserId: context.userId,
@@ -128,7 +132,7 @@ export class InventoryService {
     return {
       id: saved.id,
       medicineId: saved.medicineId,
-      medicineName: saved.medicine?.name ?? "Unknown",
+      medicineName,
       lotCode: saved.lotCode,
       expiryDate: saved.expiryDate,
       unitCost: saved.unitCost,
