@@ -12,7 +12,6 @@ import {
   type ApprovalDecision,
   ApprovalInstance,
   type ApprovalLane,
-  type ApprovalStatus,
 } from "../../entities/approval-instance.entity";
 import { Branch } from "../../entities/branch.entity";
 import { TenantApprovalPolicy } from "../../entities/tenant-approval-policy.entity";
@@ -375,9 +374,5 @@ export class ApprovalsService {
       throw new NotFoundException("Approval not found");
     }
     return approval;
-  }
-
-  getStatus(approval: ApprovalInstance): ApprovalStatus {
-    return approval.status;
   }
 }
