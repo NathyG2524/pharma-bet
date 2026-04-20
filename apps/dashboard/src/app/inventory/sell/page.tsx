@@ -111,6 +111,7 @@ export default function SellPage() {
     () => lineTotals.reduce((sum, value) => sum + value, 0),
     [lineTotals],
   );
+  const patientRequiredMessage = "Patient is required for the selected medicine(s).";
   const requiresPatient = useMemo(
     () =>
       lines.some((line) => {
@@ -199,7 +200,7 @@ export default function SellPage() {
     setLastSale(null);
     if (!lines.length || hasInvalidLine) return;
     if (isPatientMissing) {
-      setError("Patient is required for the selected medicine(s).");
+      setError(patientRequiredMessage);
       return;
     }
     setLoading(true);
@@ -405,7 +406,7 @@ export default function SellPage() {
               )}
               {isPatientMissing && (
                 <Alert variant="destructive" className="mt-3">
-                  Patient is required for the selected medicine(s).
+                  {patientRequiredMessage}
                 </Alert>
               )}
             </div>
