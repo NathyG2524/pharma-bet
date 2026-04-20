@@ -24,10 +24,12 @@ type SaleLineForm = {
   unitPrice: string;
 };
 
-const fallbackId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const createFallbackId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const createLineId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : fallbackId();
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : createFallbackId();
 
 const createLine = (medicineId = ""): SaleLineForm => ({
   id: createLineId(),
@@ -41,7 +43,7 @@ function toLocalDatetimeValue(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function formatMoney(value: number) {
+function formatDecimal(value: number) {
   return value.toFixed(4);
 }
 
@@ -338,7 +340,7 @@ export default function SellPage() {
                         Line subtotal (est.)
                       </p>
                       <div className="rounded-md border border-outline_variant/30 bg-surface_container_low px-3 py-2 text-sm">
-                        {formatMoney(lineTotals[index] ?? 0)}
+                        {formatDecimal(lineTotals[index] ?? 0)}
                       </div>
                     </div>
                   </div>
@@ -414,7 +416,7 @@ export default function SellPage() {
             <div className="rounded-lg border border-outline_variant/30 px-4 py-3">
               <p className="text-sm text-on_surface_variant">Subtotal estimate</p>
               <p className="text-lg font-semibold text-on_surface">
-                {formatMoney(subtotalEstimate)}
+                {formatDecimal(subtotalEstimate)}
               </p>
             </div>
 
