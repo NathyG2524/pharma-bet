@@ -1,3 +1,4 @@
+import type { PurchaseOrderReceiptDto, ReceivePurchaseOrderInput } from "../types/purchase-order";
 import type {
   CreatePurchaseOrderInput,
   PurchaseOrderDecisionInput,
@@ -114,6 +115,16 @@ export class PurchaseOrdersApi {
     dto: PurchaseOrderDecisionInput,
   ): Promise<PurchaseOrderDto> {
     return this.request<PurchaseOrderDto>(`/api/purchase-orders/${id}/request-changes`, {
+      method: "POST",
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async receivePurchaseOrder(
+    id: string,
+    dto: ReceivePurchaseOrderInput,
+  ): Promise<PurchaseOrderReceiptDto> {
+    return this.request<PurchaseOrderReceiptDto>(`/api/purchase-orders/${id}/receive`, {
       method: "POST",
       body: JSON.stringify(dto),
     });

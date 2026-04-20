@@ -20,6 +20,7 @@ const statusLabels: Record<PurchaseOrderStatus, string> = {
   draft: "Draft",
   pending_approval: "Pending approval",
   approved: "Approved",
+  received: "Received",
   rejected: "Rejected",
   changes_requested: "Changes requested",
 };
@@ -31,6 +32,7 @@ const statusVariants: Record<
   draft: "default",
   pending_approval: "warning",
   approved: "success",
+  received: "default",
   rejected: "destructive",
   changes_requested: "warning",
 };

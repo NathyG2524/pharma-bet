@@ -1,6 +1,7 @@
 import {
   auditEventsApi,
   branchesApi,
+  inventoryApi,
   medicinesApi,
   notificationsApi,
   patientsApi,
@@ -24,6 +25,7 @@ if (apiUrl) {
   branchesApi.configure(options);
   tenantsApi.configure(options);
   purchaseOrdersApi.configure(options);
+  inventoryApi.configure(options);
   notificationsApi.configure(options);
   auditEventsApi.configure(options);
   taxesApi.configure(options);
@@ -36,6 +38,7 @@ export {
   branchesApi,
   tenantsApi,
   purchaseOrdersApi,
+  inventoryApi,
   notificationsApi,
   auditEventsApi,
   taxesApi,

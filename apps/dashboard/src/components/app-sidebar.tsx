@@ -43,6 +43,7 @@ const inventoryLinks: NavItem[] = [
   { href: "/inventory/suppliers", label: "Suppliers", icon: Truck },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
+  { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
 ];
 
 const branchInventoryLinks: NavItem[] = [
@@ -50,6 +51,7 @@ const branchInventoryLinks: NavItem[] = [
   { href: "/inventory/new-draft", label: "Add draft medicine", icon: PackagePlus },
   { href: "/inventory/buy", label: "Buy stock", icon: ShoppingCart },
   { href: "/inventory/sell", label: "Sell", icon: LineChart },
+  { href: "/inventory/valuation", label: "Valuation", icon: LineChart },
 ];
 
 const purchasingLinks: NavItem[] = [

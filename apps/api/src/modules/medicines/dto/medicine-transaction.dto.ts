@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsInt,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsString,
   IsUUID,
@@ -19,11 +20,27 @@ export class BuyMedicineDto {
   @Min(1)
   quantity: number;
 
-  @ApiPropertyOptional({ description: "Price per unit at purchase" })
+  @ApiProperty({ description: "Unit cost at receipt" })
+  @IsNotEmpty()
+  @IsNumberString()
+  unitPrice: string;
+
+  @ApiProperty({ description: "Lot or batch code" })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(120)
+  lotCode: string;
+
+  @ApiProperty({ description: "Expiry date (YYYY-MM-DD)" })
+  @IsNotEmpty()
+  @IsDateString()
+  expiryDate: string;
+
+  @ApiPropertyOptional({ description: "Reason for receiving expired lot" })
   @IsOptional()
   @IsString()
-  @MaxLength(32)
-  unitPrice?: string;
+  @MaxLength(500)
+  expiryOverrideReason?: string;
 
   @ApiProperty({ description: "ISO date string" })
   @IsNotEmpty()

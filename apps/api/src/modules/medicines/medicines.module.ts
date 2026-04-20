@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { BranchTaxSetting } from "../../entities/branch-tax-setting.entity";
+import { InventoryLot } from "../../entities/inventory-lot.entity";
+import { InventoryMovement } from "../../entities/inventory-movement.entity";
 import { MedicineOverlay } from "../../entities/medicine-overlay.entity";
 import { MedicineTransaction } from "../../entities/medicine-transaction.entity";
 import { Medicine } from "../../entities/medicine.entity";
@@ -17,6 +19,8 @@ import { MedicinesService } from "./services/medicines.service";
       MedicineOverlay,
       MedicineTransaction,
       Patient,
+      InventoryLot,
+      InventoryMovement,
       TaxCategory,
       BranchTaxSetting,
     ]),

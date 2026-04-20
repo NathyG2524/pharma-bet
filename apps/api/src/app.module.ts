@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
 import { BranchesModule } from "./modules/branches/branches.module";
+import { InventoryModule } from "./modules/inventory/inventory.module";
 import { MedicinesModule } from "./modules/medicines/medicines.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PatientsModule } from "./modules/patients/patients.module";
@@ -25,6 +26,7 @@ import { typeOrmConfig } from "./typeorm-config";
     SuppliersModule,
     PurchaseOrdersModule,
     TaxesModule,
+    InventoryModule,
   ],
 })
 export class AppModule {}

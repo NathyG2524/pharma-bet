@@ -281,6 +281,9 @@ export class PurchaseOrdersService {
     }
     const nextSupplierId = dto.supplierId ?? po.supplierId;
     const nextBranchId = dto.branchId ?? po.branchId;
+    if (!nextSupplierId) {
+      throw new BadRequestException("Supplier is required");
+    }
     await this.ensureSupplier(context, nextSupplierId);
     await this.ensureBranch(context, nextBranchId);
     const linePayloads = dto.lines

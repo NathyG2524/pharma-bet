@@ -34,6 +34,18 @@ export type {
   UpdatePurchaseOrderInput,
 } from "./types/purchasing";
 export type {
+  PurchaseOrderReceiptDto,
+  PurchaseOrderReceiptLineDto,
+  ReceivePurchaseOrderInput,
+  ReceivePurchaseOrderLineInput,
+} from "./types/purchase-order";
+export type {
+  InventoryLotDto,
+  InventoryLotListResponse,
+  InventoryValuationLineDto,
+  InventoryValuationResponse,
+} from "./types/inventory";
+export type {
   BranchDto,
   CreateBranchInput,
   CreateTenantInput,
@@ -73,8 +85,9 @@ export { PatientsApi, patientsApi } from "./lib/patientsApi";
 export { MedicinesApi, medicinesApi } from "./lib/medicinesApi";
 export { BranchesApi, branchesApi } from "./lib/branchesApi";
 export { TenantsApi, tenantsApi } from "./lib/tenantsApi";
-export { SuppliersApi, suppliersApi } from "./lib/suppliersApi";
+export { InventoryApi, inventoryApi } from "./lib/inventoryApi";
 export { PurchaseOrdersApi, purchaseOrdersApi } from "./lib/purchaseOrdersApi";
+export { SuppliersApi, suppliersApi } from "./lib/suppliersApi";
 export { NotificationsApi, notificationsApi } from "./lib/notificationsApi";
 export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";

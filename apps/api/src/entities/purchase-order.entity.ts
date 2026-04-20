@@ -12,6 +12,7 @@ import {
 import { Branch } from "./branch.entity";
 import { PurchaseOrderEvent } from "./purchase-order-event.entity";
 import { PurchaseOrderLine } from "./purchase-order-line.entity";
+import { PurchaseOrderReceipt } from "./purchase-order-receipt.entity";
 import { Supplier } from "./supplier.entity";
 import { Tenant } from "./tenant.entity";
 
@@ -19,6 +20,7 @@ export enum PurchaseOrderStatus {
   DRAFT = "draft",
   PENDING_APPROVAL = "pending_approval",
   APPROVED = "approved",
+  RECEIVED = "received",
   REJECTED = "rejected",
   CHANGES_REQUESTED = "changes_requested",
 }
@@ -44,12 +46,15 @@ export class PurchaseOrder {
   @JoinColumn({ name: "branchId" })
   branch: Branch;
 
-  @Column({ type: "uuid" })
-  supplierId: string;
+  @Column({ type: "varchar", nullable: true })
+  orderNumber: string | null;
 
-  @ManyToOne(() => Supplier, { onDelete: "CASCADE" })
+  @Column({ type: "uuid", nullable: true })
+  supplierId: string | null;
+
+  @ManyToOne(() => Supplier, { onDelete: "CASCADE", nullable: true })
   @JoinColumn({ name: "supplierId" })
-  supplier: Supplier;
+  supplier: Supplier | null;
 
   @Column({
     type: "enum",
@@ -62,11 +67,11 @@ export class PurchaseOrder {
   @Column({ type: "text", nullable: true })
   notes: string | null;
 
-  @Column({ type: "varchar" })
-  createdBy: string;
+  @Column({ type: "varchar", nullable: true })
+  createdBy: string | null;
 
-  @Column({ type: "varchar" })
-  updatedBy: string;
+  @Column({ type: "varchar", nullable: true })
+  updatedBy: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
@@ -79,6 +84,12 @@ export class PurchaseOrder {
     (line) => line.purchaseOrder,
   )
   lines: PurchaseOrderLine[];
+
+  @OneToMany(
+    () => PurchaseOrderReceipt,
+    (receipt) => receipt.purchaseOrder,
+  )
+  receipts: PurchaseOrderReceipt[];
 
   @OneToMany(
     () => PurchaseOrderEvent,

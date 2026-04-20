@@ -38,6 +38,13 @@ export class PurchaseOrderLine {
   @Column({ type: "int" })
   quantity: number;
 
+  get orderedQuantity(): number {
+    return this.quantity;
+  }
+  set orderedQuantity(value: number) {
+    this.quantity = value;
+  }
+
   @Column({ type: "decimal", precision: 14, scale: 4, nullable: true })
   unitCost: string | null;
 

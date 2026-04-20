@@ -1,8 +1,13 @@
 "use client";
 
-import { medicinesApi } from "@/lib/api";
+import { inventoryApi, medicinesApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import type { CanonicalMedicineDto, MedicineDto, MedicineTransactionDto } from "@drug-store/shared";
+import type {
+  CanonicalMedicineDto,
+  InventoryLotDto,
+  MedicineDto,
+  MedicineTransactionDto,
+} from "@drug-store/shared";
 import {
   Alert,
   Badge,
@@ -46,6 +51,8 @@ export default function MedicineDetailPage() {
   const [catalogItem, setCatalogItem] = useState<CanonicalMedicineDto | null>(null);
   const [transactions, setTransactions] = useState<MedicineTransactionDto[]>([]);
   const [totalTx, setTotalTx] = useState(0);
+  const [lots, setLots] = useState<InventoryLotDto[]>([]);
+  const [lotsLoading, setLotsLoading] = useState(false);
   const pageSize = 30;
   const [loading, setLoading] = useState(true);
   const [txLoading, setTxLoading] = useState(false);
@@ -115,6 +122,21 @@ export default function MedicineDetailPage() {
         setTransactions([]);
       } finally {
         setTxLoading(false);
+      }
+    })();
+  }, [id, medicineId, isBranchUser]);
+
+  useEffect(() => {
+    if (!id || !medicineId || !isBranchUser) return;
+    void (async () => {
+      setLotsLoading(true);
+      try {
+        const res = await inventoryApi.listLots({ medicineId: id });
+        setLots(res.items);
+      } catch {
+        setLots([]);
+      } finally {
+        setLotsLoading(false);
       }
     })();
   }, [id, medicineId, isBranchUser]);
@@ -589,6 +611,65 @@ export default function MedicineDetailPage() {
                   </div>
                 )}
               </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {isBranchUser && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Lots on hand</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lotsLoading ? (
+              <p className="text-sm text-gray-500">Loading lots…</p>
+            ) : lots.length === 0 ? (
+              <p className="text-sm text-gray-500">No lots on hand.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+                <table className="w-full text-left text-sm text-on_surface_variant">
+                  <thead className="sticky top-0 z-10 bg-surface_container_lowest">
+                    <tr>
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                        Lot
+                      </th>
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                        Expiry
+                      </th>
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                        Qty
+                      </th>
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                        Unit cost
+                      </th>
+                      <th className="px-4 py-4 text-[0.6875rem] font-bold uppercase tracking-[0.05rem] text-on_surface_variant">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lots.map((lot) => (
+                      <tr
+                        key={lot.id}
+                        className="transition-colors hover:bg-surface_container_high"
+                      >
+                        <td className="px-4 py-4 text-on_surface">{lot.lotCode}</td>
+                        <td className="px-4 py-4 text-on_surface_variant">{lot.expiryDate}</td>
+                        <td className="px-4 py-4 text-on_surface">{lot.quantityOnHand}</td>
+                        <td className="px-4 py-4 text-on_surface_variant">{lot.unitCost}</td>
+                        <td className="px-4 py-4">
+                          {lot.isExpired ? (
+                            <Badge variant="warning">Expired</Badge>
+                          ) : (
+                            <Badge variant="success">OK</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -4,6 +4,7 @@ export type PurchaseOrderStatus =
   | "draft"
   | "pending_approval"
   | "approved"
+  | "received"
   | "rejected"
   | "changes_requested";
 
