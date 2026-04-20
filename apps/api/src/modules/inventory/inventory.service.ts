@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import { InventoryLot, type InventoryLotStatus } from "../../entities/inventory-lot.entity";
@@ -88,6 +94,9 @@ export class InventoryService {
     payload: { status: InventoryLotStatus; reason?: string | null },
   ): Promise<LotSummary> {
     const scope = this.getBranchScope(context);
+    if (!context.userId) {
+      throw new UnauthorizedException("User context is required to update lot status");
+    }
     const lot = await this.lotRepo.findOne({
       where: { id: lotId, tenantId: scope.tenantId, branchId: scope.branchId },
       relations: { medicine: true },
@@ -104,7 +113,7 @@ export class InventoryService {
     const saved = await this.lotRepo.save(lot);
     await this.auditEventsService.recordEvent({
       tenantId: scope.tenantId,
-      actorUserId: context.userId ?? "unknown",
+      actorUserId: context.userId,
       action: "inventory.lot.status_updated",
       entityType: "inventory_lot",
       entityId: saved.id,
