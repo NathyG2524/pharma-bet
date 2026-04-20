@@ -2,6 +2,7 @@
 
 import { inventoryApi, transfersApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { getMutationErrorMessage } from "@/lib/mutation-error";
 import type {
   InventoryLotDto,
   ShipTransferLineInput,
@@ -174,7 +175,7 @@ export default function TransferDetailPage() {
       setTransfer(updated);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to ship transfer");
+      setError(getMutationErrorMessage(err, "Transfer was not shipped."));
     } finally {
       setLoading(false);
     }
@@ -202,7 +203,7 @@ export default function TransferDetailPage() {
       await load();
       router.push("/transfers");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to receive transfer");
+      setError(getMutationErrorMessage(err, "Transfer receipt was not saved."));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { medicinesApi } from "@/lib/api";
+import { getMutationErrorMessage } from "@/lib/mutation-error";
 import { parseLocalDateTime } from "@/lib/validation";
 import type { MedicineDto } from "@drug-store/shared";
 import {
@@ -109,7 +110,7 @@ export default function BuyStockPage() {
       setExpiryOverrideReason("");
       await loadMedicines();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(getMutationErrorMessage(err, "Purchase was not recorded."));
     } finally {
       setLoading(false);
     }
