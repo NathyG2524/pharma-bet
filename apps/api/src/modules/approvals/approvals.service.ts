@@ -291,7 +291,9 @@ export class ApprovalsService {
     approval.approvalPath = {
       bm: approval.bmDecisionPath,
       hq: approval.hqDecisionPath,
-      usesCombinedPath: this.isCombinedPath(approval.bmDecisionPath),
+      usesCombinedPath:
+        this.isCombinedPath(approval.bmDecisionPath) ||
+        this.isCombinedPath(approval.hqDecisionPath),
     };
 
     const saved = await this.approvalRepo.save(approval);
