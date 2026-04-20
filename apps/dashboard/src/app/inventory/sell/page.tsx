@@ -289,13 +289,15 @@ export default function SellPage() {
                             onChange={(e) => handleMedicineChange(line.id, e.target.value)}
                             disabled={loading}
                           >
-                            {medicines.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {`${m.name} (stock: ${m.stockQuantity}${
-                                  m.requiresPatient ? ", patient required" : ""
-                                })`}
-                              </option>
-                            ))}
+                            {medicines.map((m) => {
+                              const patientTag = m.requiresPatient ? ", patient required" : "";
+                              const label = `${m.name} (stock: ${m.stockQuantity}${patientTag})`;
+                              return (
+                                <option key={m.id} value={m.id}>
+                                  {label}
+                                </option>
+                              );
+                            })}
                           </Select>
                           {medicine && (
                             <p className="mt-1 text-sm text-gray-500">
