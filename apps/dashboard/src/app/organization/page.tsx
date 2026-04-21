@@ -89,6 +89,10 @@ export default function OrganizationPage() {
   }, [branches, assignmentBranchId]);
 
   const roleSelectValue = useMemo(() => state.roles[0] ?? "hq_admin", [state.roles]);
+  const tenantNameById = useMemo(
+    () => new Map(tenants.map((tenant) => [tenant.id, tenant.name])),
+    [tenants],
+  );
 
   const handleTenantCreate = async () => {
     setError(null);
@@ -325,7 +329,9 @@ export default function OrganizationPage() {
                   pendingHqInvites.map((invite) => (
                     <tr key={invite.id} className="hover:bg-surface_container_high">
                       <td className="px-4 py-3 text-on_surface">{invite.email}</td>
-                      <td className="px-4 py-3">{invite.tenantId}</td>
+                      <td className="px-4 py-3">
+                        {tenantNameById.get(invite.tenantId) ?? invite.tenantId}
+                      </td>
                       <td className="px-4 py-3">{new Date(invite.expiresAt).toLocaleString()}</td>
                       <td className="px-4 py-3">
                         <Button

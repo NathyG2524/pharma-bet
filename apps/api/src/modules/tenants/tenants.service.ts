@@ -81,10 +81,7 @@ export class TenantsService {
 
     const token = randomBytes(32).toString("hex");
     const tokenHash = createHash("sha256").update(token).digest("hex");
-    const parsedInviteTtlHours = Number.parseInt(
-      process.env.INVITE_TTL_HOURS ?? DEFAULT_INVITE_TTL_HOURS.toString(),
-      10,
-    );
+    const parsedInviteTtlHours = Number.parseInt(process.env.INVITE_TTL_HOURS ?? "", 10);
     const inviteTtlHours =
       Number.isFinite(parsedInviteTtlHours) && parsedInviteTtlHours > 0
         ? parsedInviteTtlHours
