@@ -51,9 +51,11 @@ export type {
 } from "./types/inventory";
 export type {
   BranchDto,
+  CreateTenantResultDto,
   CreateBranchInput,
   CreateTenantInput,
   MembershipDto,
+  PendingHqInviteDto,
   AssignMembershipInput,
   TenantDto,
   UserRole,

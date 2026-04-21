@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { UserRole } from "../../entities/user-membership.entity";
 import type { AuthContext } from "../tenancy/auth-context";
@@ -28,5 +28,22 @@ export class TenantsController {
   @Roles(UserRole.PLATFORM_ADMIN)
   async create(@AuthContextParam() context: AuthContext, @Body() dto: CreateTenantDto) {
     return this.tenantsService.create(context, dto);
+  }
+
+  @Get("hq-invites")
+  @AllowTenantless()
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async listPendingHqInvites(@Query("tenantId") tenantId?: string) {
+    return this.tenantsService.listPendingHqInvites(tenantId);
+  }
+
+  @Post("hq-invites/:inviteId/revoke")
+  @AllowTenantless()
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async revokePendingHqInvite(
+    @AuthContextParam() context: AuthContext,
+    @Param("inviteId") inviteId: string,
+  ) {
+    return this.tenantsService.revokePendingHqInvite(context, inviteId);
   }
 }

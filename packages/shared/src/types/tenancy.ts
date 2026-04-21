@@ -27,7 +27,24 @@ export interface MembershipDto {
 
 export interface CreateTenantInput {
   name: string;
-  hqAdminUserId?: string;
+  hqAdminEmail: string;
+}
+
+export interface PendingHqInviteDto {
+  id: string;
+  tenantId: string;
+  email: string;
+  role: "hq_admin";
+  expiresAt: string;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface CreateTenantResultDto {
+  tenant: TenantDto;
+  invite: PendingHqInviteDto & {
+    url: string;
+  };
 }
 
 export interface CreateBranchInput {

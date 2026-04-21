@@ -1,11 +1,10 @@
-import { IsOptional, IsString, MinLength } from "class-validator";
+import { IsEmail, IsString, MinLength } from "class-validator";
 
 export class CreateTenantDto {
   @IsString()
   @MinLength(2)
   name: string;
 
-  @IsOptional()
-  @IsString()
-  hqAdminUserId?: string;
+  @IsEmail()
+  hqAdminEmail: string;
 }
