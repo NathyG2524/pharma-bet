@@ -41,7 +41,7 @@ export class AuthApi {
   }
 
   async acceptInvite(body: { token: string; password: string }): Promise<AuthResponseDto> {
-    return this.request<AuthResponseDto>("/api/auth/accept-invite", {
+    return this.request<AuthResponseDto>("/api/invites/accept", {
       method: "POST",
       body: JSON.stringify(body),
     });

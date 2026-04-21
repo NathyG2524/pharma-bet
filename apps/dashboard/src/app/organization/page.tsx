@@ -2,7 +2,14 @@
 
 import { branchesApi, tenantsApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import type { BranchDto, PendingHqInviteDto, TenantDto, UserRole } from "@drug-store/shared";
+import type {
+  BranchDto,
+  BranchInviteRole,
+  PendingBranchInviteDto,
+  PendingHqInviteDto,
+  TenantDto,
+  UserRole,
+} from "@drug-store/shared";
 import {
   Alert,
   Button,
@@ -32,7 +39,12 @@ export default function OrganizationPage() {
   const [branchName, setBranchName] = useState("");
   const [branchCode, setBranchCode] = useState("");
   const [pendingHqInvites, setPendingHqInvites] = useState<PendingHqInviteDto[]>([]);
+  const [pendingBranchInvites, setPendingBranchInvites] = useState<PendingBranchInviteDto[]>([]);
   const [latestHqInviteUrl, setLatestHqInviteUrl] = useState<string | null>(null);
+  const [latestBranchInviteUrl, setLatestBranchInviteUrl] = useState<string | null>(null);
+  const [branchInviteEmail, setBranchInviteEmail] = useState("");
+  const [branchInviteBranchId, setBranchInviteBranchId] = useState("");
+  const [branchInviteRole, setBranchInviteRole] = useState<BranchInviteRole>("branch_user");
   const [assignmentUserId, setAssignmentUserId] = useState("");
   const [assignmentRole, setAssignmentRole] = useState<UserRole>("branch_user");
   const [assignmentBranchId, setAssignmentBranchId] = useState("");
@@ -70,6 +82,21 @@ export default function OrganizationPage() {
     }
   }, []);
 
+  const isHqAdmin = state.roles.includes("hq_admin");
+
+  const refreshPendingBranchInvites = useCallback(async () => {
+    if (!state.tenantId || !isHqAdmin) {
+      setPendingBranchInvites([]);
+      return;
+    }
+    try {
+      const data = await branchesApi.listPendingBranchInvites();
+      setPendingBranchInvites(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load pending branch invites");
+    }
+  }, [state.tenantId, isHqAdmin]);
+
   useEffect(() => {
     refreshTenants();
   }, [refreshTenants]);
@@ -83,15 +110,30 @@ export default function OrganizationPage() {
   }, [refreshPendingHqInvites]);
 
   useEffect(() => {
+    void refreshPendingBranchInvites();
+  }, [refreshPendingBranchInvites]);
+
+  useEffect(() => {
     if (branches.length && !assignmentBranchId) {
       setAssignmentBranchId(branches[0].id);
     }
   }, [branches, assignmentBranchId]);
 
+  useEffect(() => {
+    if (branches.length && !branchInviteBranchId) {
+      setBranchInviteBranchId(branches[0].id);
+    }
+  }, [branches, branchInviteBranchId]);
+
   const roleSelectValue = useMemo(() => state.roles[0] ?? "hq_admin", [state.roles]);
   const tenantNameById = useMemo(
     () => new Map(tenants.map((tenant) => [tenant.id, tenant.name])),
     [tenants],
+  );
+
+  const branchNameById = useMemo(
+    () => new Map(branches.map((branch) => [branch.id, branch.name])),
+    [branches],
   );
 
   const handleTenantCreate = async () => {
@@ -135,6 +177,49 @@ export default function OrganizationPage() {
     if (!latestHqInviteUrl) return;
     try {
       await navigator.clipboard.writeText(latestHqInviteUrl);
+    } catch {
+      setError("Failed to copy invite link to clipboard. Please copy it manually.");
+    }
+  };
+
+  const handleCreateBranchInvite = async () => {
+    setError(null);
+    const trimmedEmail = branchInviteEmail.trim().toLowerCase();
+    if (!trimmedEmail || !branchInviteBranchId || !state.tenantId) return;
+    setLoading(true);
+    try {
+      const created = await branchesApi.createBranchInvite({
+        email: trimmedEmail,
+        branchId: branchInviteBranchId,
+        role: branchInviteRole,
+      });
+      setBranchInviteEmail("");
+      setLatestBranchInviteUrl(created.url);
+      setPendingBranchInvites((prev) => [created.invite, ...prev]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create branch invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeBranchInvite = async (inviteId: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      await branchesApi.revokeBranchInvite(inviteId);
+      setPendingBranchInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to revoke branch invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopyLatestBranchInviteLink = async () => {
+    if (!latestBranchInviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(latestBranchInviteUrl);
     } catch {
       setError("Failed to copy invite link to clipboard. Please copy it manually.");
     }
@@ -428,6 +513,154 @@ export default function OrganizationPage() {
           </div>
         </CardContent>
       </Card>
+
+      {isHqAdmin && state.tenantId ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Branch staff invites</CardTitle>
+            <p className="text-sm text-on_surface_variant font-normal">
+              Invite branch managers or branch users with a required branch. Copy the link and share
+              it out of band.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-[2fr_1fr_1fr_auto]">
+              <div>
+                <label
+                  htmlFor="branch-invite-email"
+                  className="mb-1.5 block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <Input
+                  id="branch-invite-email"
+                  type="email"
+                  value={branchInviteEmail}
+                  onChange={(e) => setBranchInviteEmail(e.target.value)}
+                  placeholder="staff@example.com"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="branch-invite-branch"
+                  className="mb-1.5 block text-sm font-medium text-gray-700"
+                >
+                  Branch
+                </label>
+                <Select
+                  id="branch-invite-branch"
+                  value={branchInviteBranchId}
+                  onChange={(e) => setBranchInviteBranchId(e.target.value)}
+                  disabled={!branches.length}
+                >
+                  <option value="" disabled>
+                    Select branch
+                  </option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div>
+                <label
+                  htmlFor="branch-invite-role"
+                  className="mb-1.5 block text-sm font-medium text-gray-700"
+                >
+                  Role
+                </label>
+                <Select
+                  id="branch-invite-role"
+                  value={branchInviteRole}
+                  onChange={(e) => setBranchInviteRole(e.target.value as BranchInviteRole)}
+                >
+                  <option value="branch_manager">Branch manager</option>
+                  <option value="branch_user">Branch user</option>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  onClick={() => void handleCreateBranchInvite()}
+                  disabled={
+                    loading ||
+                    !branchInviteEmail.trim() ||
+                    !branchInviteBranchId ||
+                    !branches.length
+                  }
+                >
+                  Create invite
+                </Button>
+              </div>
+            </div>
+            {latestBranchInviteUrl ? (
+              <div className="rounded-lg border border-outline_variant/30 bg-surface_container_low px-3 py-2 text-xs text-on_surface_variant">
+                Latest branch invite link:{" "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => void handleCopyLatestBranchInviteLink()}
+                >
+                  Copy link
+                </button>
+              </div>
+            ) : null}
+            <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+              <table className="w-full text-left text-sm text-on_surface_variant">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                      Branch
+                    </th>
+                    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                      Role
+                    </th>
+                    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                      Expires
+                    </th>
+                    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingBranchInvites.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-4 text-center text-on_surface_variant">
+                        No pending branch invites.
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingBranchInvites.map((invite) => (
+                      <tr key={invite.id} className="hover:bg-surface_container_high">
+                        <td className="px-4 py-3 text-on_surface">{invite.email}</td>
+                        <td className="px-4 py-3">
+                          {branchNameById.get(invite.branchId) ?? invite.branchId}
+                        </td>
+                        <td className="px-4 py-3">{invite.role}</td>
+                        <td className="px-4 py-3">{new Date(invite.expiresAt).toLocaleString()}</td>
+                        <td className="px-4 py-3">
+                          <Button
+                            type="button"
+                            onClick={() => void handleRevokeBranchInvite(invite.id)}
+                            disabled={loading}
+                          >
+                            Revoke
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

@@ -419,7 +419,7 @@ export default function TransferDetailPage() {
                               />
                               <Button
                                 type="button"
-                                variant="ghost"
+                                variant="tertiary"
                                 onClick={() => removeAllocation(line.id, allocation.id)}
                               >
                                 Remove
