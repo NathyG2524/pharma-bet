@@ -83,7 +83,7 @@ export class TenantsService {
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const parsedInviteTtlHours = Number.parseInt(process.env.INVITE_TTL_HOURS ?? "", 10);
     const inviteTtlHours =
-      Number.isFinite(parsedInviteTtlHours) && parsedInviteTtlHours > 0
+      Number.isInteger(parsedInviteTtlHours) && parsedInviteTtlHours > 0
         ? parsedInviteTtlHours
         : DEFAULT_INVITE_TTL_HOURS;
     const expiresAt = new Date(Date.now() + inviteTtlHours * 60 * 60 * 1000);
