@@ -9,6 +9,7 @@ import {
 import { Reflector } from "@nestjs/core";
 import { DataSource } from "typeorm";
 import { UserMembership, UserRole } from "../../entities/user-membership.entity";
+import { User } from "../../entities/user.entity";
 import type { RequestWithAuth } from "./auth-context";
 import { ALLOW_TENANTLESS_KEY } from "./auth.decorators";
 
@@ -27,6 +28,12 @@ export class AuthGuard implements CanActivate {
     if (!auth?.userId) {
       throw new UnauthorizedException("Missing user identity");
     }
+    const userRepo = this.dataSource.getRepository(User);
+    const user = await userRepo.findOne({ where: { id: auth.userId } });
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+    const isPlatformAdmin = user.platformAdmin === true;
 
     const allowTenantless = this.reflector.getAllAndOverride<boolean>(ALLOW_TENANTLESS_KEY, [
       context.getHandler(),
@@ -35,12 +42,10 @@ export class AuthGuard implements CanActivate {
 
     if (!auth.tenantId) {
       if (allowTenantless) {
-        const roles = auth.roles ?? [];
-        const branchIds = auth.branchIds ?? [];
         request.authContext = {
           ...auth,
-          roles,
-          branchIds,
+          roles: isPlatformAdmin ? [UserRole.PLATFORM_ADMIN] : [],
+          branchIds: [],
         };
         return true;
       }
@@ -53,7 +58,7 @@ export class AuthGuard implements CanActivate {
     });
 
     if (!memberships.length) {
-      if (auth.roles?.includes(UserRole.PLATFORM_ADMIN)) {
+      if (isPlatformAdmin) {
         request.authContext = {
           ...auth,
           roles: [UserRole.PLATFORM_ADMIN],
@@ -68,7 +73,7 @@ export class AuthGuard implements CanActivate {
       new Set(
         memberships
           .map((membership) => membership.role)
-          .concat(auth.roles?.includes(UserRole.PLATFORM_ADMIN) ? [UserRole.PLATFORM_ADMIN] : []),
+          .concat(isPlatformAdmin ? [UserRole.PLATFORM_ADMIN] : []),
       ),
     );
     const branchIds = Array.from(
