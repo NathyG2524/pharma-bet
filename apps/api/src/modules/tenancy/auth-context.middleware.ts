@@ -1,6 +1,8 @@
 import { Injectable, type NestMiddleware } from "@nestjs/common";
 import type { Request, Response } from "express";
+import * as jwt from "jsonwebtoken";
 import type { UserRole } from "../../entities/user-membership.entity";
+import { getJwtSecret } from "../auth/jwt-secret";
 import type { AuthContext, RequestWithAuth } from "./auth-context";
 
 const parseCsv = (value?: string | null) =>
@@ -14,7 +16,24 @@ const parseCsv = (value?: string | null) =>
 @Injectable()
 export class AuthContextMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: () => void) {
-    const userId = req.header("x-user-id")?.trim();
+    let userId = req.header("x-user-id")?.trim();
+    const authHeader = req.header("authorization");
+    const bearer =
+      authHeader?.startsWith("Bearer ") || authHeader?.startsWith("bearer ")
+        ? authHeader.slice(7).trim()
+        : null;
+    if (bearer) {
+      try {
+        const payload = jwt.verify(bearer, getJwtSecret()) as jwt.JwtPayload & {
+          sub?: string;
+        };
+        if (typeof payload.sub === "string" && payload.sub.length > 0) {
+          userId = payload.sub;
+        }
+      } catch {
+        /* invalid or expired token — fall through to header user id */
+      }
+    }
     const tenantId = req.header("x-tenant-id")?.trim();
     const rolesHeader = req.header("x-roles") ?? req.header("x-role");
     const branchIdsHeader = req.header("x-branch-ids");

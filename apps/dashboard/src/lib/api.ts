@@ -2,6 +2,7 @@ import {
   adjustmentsApi,
   approvalsApi,
   auditEventsApi,
+  authApi,
   branchesApi,
   inventoryApi,
   medicinesApi,
@@ -25,6 +26,7 @@ const apiUrl =
     : "";
 
 if (apiUrl) {
+  authApi.configure({ apiBaseUrl: apiUrl });
   const options = { apiBaseUrl: apiUrl, getAuthHeaders };
   patientsApi.configure(options);
   medicinesApi.configure(options);
@@ -61,4 +63,5 @@ export {
   stockCountsApi,
   approvalsApi,
   supplierReturnsApi,
+  authApi,
 };

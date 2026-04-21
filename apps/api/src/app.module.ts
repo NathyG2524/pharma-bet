@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdjustmentsModule } from "./modules/adjustments/adjustments.module";
 import { ApprovalsModule } from "./modules/approvals/approvals.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { InventoryModule } from "./modules/inventory/inventory.module";
@@ -22,6 +23,7 @@ import { typeOrmConfig } from "./typeorm-config";
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
+    AuthModule,
     TenancyModule,
     TenantsModule,
     AuditEventsModule,

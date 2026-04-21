@@ -1,7 +1,9 @@
 import type { UserRole } from "@drug-store/shared";
 
 export type DevAuthState = {
+  accessToken: string | null;
   userId: string;
+  email?: string;
   tenantId: string;
   roles: UserRole[];
   branchIds: string[];
@@ -11,9 +13,11 @@ export type DevAuthState = {
 const STORAGE_KEY = "pharma-dev-auth";
 
 const defaultState: DevAuthState = {
-  userId: "dev-user",
+  accessToken: null,
+  userId: "",
+  email: undefined,
   tenantId: "",
-  roles: ["hq_admin"],
+  roles: [],
   branchIds: [],
   activeBranchId: null,
 };
@@ -32,9 +36,14 @@ export const readAuthState = (): DevAuthState => {
       typeof parsed.activeBranchId === "string"
         ? parsed.activeBranchId.trim() || null
         : (parsed.activeBranchId ?? defaultState.activeBranchId);
+    const accessToken =
+      typeof parsed.accessToken === "string" && parsed.accessToken.length > 0
+        ? parsed.accessToken
+        : null;
     return {
       ...defaultState,
       ...parsed,
+      accessToken,
       roles: Array.isArray(parsed.roles) ? (parsed.roles as UserRole[]) : defaultState.roles,
       branchIds: Array.isArray(parsed.branchIds) ? parsed.branchIds : defaultState.branchIds,
       activeBranchId: normalizedActiveBranchId,
@@ -51,9 +60,15 @@ export const writeAuthState = (state: DevAuthState) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 };
 
+export const clearAuthSession = (): DevAuthState => ({ ...defaultState });
+
 export const buildAuthHeaders = (state: DevAuthState): Record<string, string> => {
   const headers: Record<string, string> = {};
-  if (state.userId) headers["x-user-id"] = state.userId;
+  if (state.accessToken) {
+    headers.Authorization = `Bearer ${state.accessToken}`;
+  } else if (state.userId) {
+    headers["x-user-id"] = state.userId;
+  }
   if (state.tenantId) headers["x-tenant-id"] = state.tenantId;
   if (state.activeBranchId) headers["x-active-branch-id"] = state.activeBranchId;
   if (state.roles?.length) headers["x-roles"] = state.roles.join(",");

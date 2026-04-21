@@ -2,12 +2,14 @@
 
 import { useAuthContext } from "@/lib/auth-context";
 import { cn } from "@drug-store/ui";
+import { clearAuthSession } from "@/lib/auth-storage";
 import {
   Activity,
   Bell,
   CheckSquare,
   ClipboardList,
   LineChart,
+  LogOut,
   PackagePlus,
   Pill,
   ScrollText,
@@ -18,7 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { TenantBranchSwitcher } from "./tenant-branch-switcher";
 
 type NavItem = {
@@ -112,12 +114,26 @@ function NavLink({ href, label, icon: Icon }: NavItem) {
 }
 
 export function AppSidebar() {
-  const { state } = useAuthContext();
+  const { state, updateState } = useAuthContext();
+  const router = useRouter();
   const isHqUser = state.roles.some((role) =>
     ["hq_admin", "hq_user", "platform_admin"].includes(role),
   );
   const visibleInventoryLinks = isHqUser ? inventoryLinks : branchInventoryLinks;
   const visiblePurchasingLinks = isHqUser ? purchasingLinks : branchPurchasingLinks;
+
+  const displayName = state.email?.split("@")[0] ?? "User";
+  const initials = displayName
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
+
+  const signOut = () => {
+    updateState(clearAuthSession());
+    router.push("/login");
+  };
 
   return (
     <aside className="w-64 flex flex-col bg-surface_container_low min-h-screen">
@@ -188,18 +204,26 @@ export function AppSidebar() {
         </div>
       </nav>
 
-      <div className="p-4 mb-4">
-        <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on_surface_variant hover:bg-surface_container cursor-pointer transition-colors">
-          <div className="h-8 w-8 rounded-full bg-surface_container_lowest shadow-tonal flex items-center justify-center text-primary font-bold tracking-tight">
-            JD
+      <div className="p-4 mb-4 space-y-2">
+        <div className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-on_surface_variant">
+          <div className="h-8 w-8 rounded-full bg-surface_container_lowest shadow-tonal flex items-center justify-center text-primary text-xs font-bold tracking-tight">
+            {initials}
           </div>
-          <div className="flex flex-col">
-            <span className="font-medium text-on_surface">John Doe</span>
-            <span className="text-[0.6875rem] uppercase tracking-[0.05rem] text-on_surface_variant">
-              Pharmacist
-            </span>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="font-medium text-on_surface truncate">{displayName}</span>
+            {state.email ? (
+              <span className="text-[0.6875rem] text-on_surface_variant truncate">{state.email}</span>
+            ) : null}
           </div>
         </div>
+        <button
+          type="button"
+          onClick={signOut}
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-on_surface_variant hover:bg-surface_container hover:text-on_surface transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
       </div>
     </aside>
   );

@@ -58,6 +58,7 @@ export type {
   TenantDto,
   UserRole,
 } from "./types/tenancy";
+export type { AuthResponseDto, AuthUserDto } from "./types/auth";
 export type {
   CreatePoPendingBranchApprovalNotificationInput,
   NotificationDispatchResult,
@@ -156,3 +157,4 @@ export { AuditEventsApi, auditEventsApi } from "./lib/auditEventsApi";
 export { TaxesApi, taxesApi } from "./lib/taxesApi";
 export { SalesApi, salesApi } from "./lib/salesApi";
 export { TransfersApi, transfersApi } from "./lib/transfersApi";
+export { AuthApi, authApi } from "./lib/authApi";
