@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import type { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import type { Repository } from "typeorm";
@@ -23,14 +23,14 @@ export class AuthService {
     return email.trim().toLowerCase();
   }
 
-  private async signToken(user: User): Promise<string> {
+  async signToken(user: User): Promise<string> {
     return this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
     });
   }
 
-  private toView(user: User): AuthUserView {
+  toView(user: User): AuthUserView {
     return { id: user.id, email: user.email };
   }
 
