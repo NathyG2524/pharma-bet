@@ -7,6 +7,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+const openRegistrationEnabled = (() => {
+  const envValue = process.env.NEXT_PUBLIC_ENABLE_OPEN_REGISTER;
+  if (typeof envValue === "string") {
+    const normalized = envValue.trim().toLowerCase();
+    if (normalized === "1" || normalized === "true" || normalized === "yes") {
+      return true;
+    }
+    if (normalized === "0" || normalized === "false" || normalized === "no") {
+      return false;
+    }
+  }
+  return process.env.NODE_ENV !== "production";
+})();
+
 function LoginForm() {
   const { state, updateState } = useAuthContext();
   const router = useRouter();
@@ -91,12 +105,14 @@ function LoginForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
-          <p className="text-center text-sm text-on_surface_variant">
-            No account?{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              Register
-            </Link>
-          </p>
+          {openRegistrationEnabled ? (
+            <p className="text-center text-sm text-on_surface_variant">
+              No account?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Register
+              </Link>
+            </p>
+          ) : null}
         </form>
       </CardContent>
     </Card>

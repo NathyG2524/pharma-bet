@@ -68,12 +68,6 @@ export function TenantBranchSwitcher() {
   }, [refreshBranches]);
 
   useEffect(() => {
-    if (!state.tenantId && tenants.length > 0) {
-      updateState({ tenantId: tenants[0].id, activeBranchId: null, branchIds: [] });
-    }
-  }, [tenants, state.tenantId, updateState]);
-
-  useEffect(() => {
     const branchIds = branches.map((branch) => branch.id);
     const patch: { branchIds?: string[]; activeBranchId?: string | null } = {};
     if (!arraysEqual(branchIds, state.branchIds)) {

@@ -9,6 +9,7 @@ import {
 import { Reflector } from "@nestjs/core";
 import { DataSource } from "typeorm";
 import { UserMembership, UserRole } from "../../entities/user-membership.entity";
+import { User } from "../../entities/user.entity";
 import type { RequestWithAuth } from "./auth-context";
 import { ALLOW_TENANTLESS_KEY } from "./auth.decorators";
 
@@ -32,14 +33,20 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const usersRepo = this.dataSource.getRepository(User);
+    const user = await usersRepo.findOne({
+      where: { id: auth.userId },
+      select: ["id", "platformAdmin"],
+    });
+    const isPlatformAdmin = user?.platformAdmin === true;
+    const effectiveRoles = isPlatformAdmin ? [UserRole.PLATFORM_ADMIN] : [];
 
     if (!auth.tenantId) {
       if (allowTenantless) {
-        const roles = auth.roles ?? [];
         const branchIds = auth.branchIds ?? [];
         request.authContext = {
           ...auth,
-          roles,
+          roles: effectiveRoles,
           branchIds,
         };
         return true;
@@ -53,7 +60,7 @@ export class AuthGuard implements CanActivate {
     });
 
     if (!memberships.length) {
-      if (auth.roles?.includes(UserRole.PLATFORM_ADMIN)) {
+      if (isPlatformAdmin) {
         request.authContext = {
           ...auth,
           roles: [UserRole.PLATFORM_ADMIN],
@@ -65,11 +72,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const roles = Array.from(
-      new Set(
-        memberships
-          .map((membership) => membership.role)
-          .concat(auth.roles?.includes(UserRole.PLATFORM_ADMIN) ? [UserRole.PLATFORM_ADMIN] : []),
-      ),
+      new Set(memberships.map((membership) => membership.role).concat(effectiveRoles)),
     );
     const branchIds = Array.from(
       new Set(memberships.map((membership) => membership.branchId).filter(Boolean) as string[]),
