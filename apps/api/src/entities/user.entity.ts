@@ -17,6 +17,9 @@ export class User {
   @Column({ type: "varchar", name: "passwordHash" })
   passwordHash: string;
 
+  @Column({ type: "boolean", default: false, name: "platformAdmin" })
+  platformAdmin: boolean;
+
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
