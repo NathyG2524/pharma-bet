@@ -1,4 +1,9 @@
-import type { CreateTenantInput, TenantDto } from "../types/tenancy";
+import type {
+  CreateTenantInput,
+  CreateTenantResultDto,
+  PendingHqInviteDto,
+  TenantDto,
+} from "../types/tenancy";
 
 export class TenantsApi {
   private apiBaseUrl: string | null = null;
@@ -37,10 +42,21 @@ export class TenantsApi {
     return this.request<TenantDto[]>("/api/tenants");
   }
 
-  async createTenant(dto: CreateTenantInput): Promise<TenantDto> {
-    return this.request<TenantDto>("/api/tenants", {
+  async createTenant(dto: CreateTenantInput): Promise<CreateTenantResultDto> {
+    return this.request<CreateTenantResultDto>("/api/tenants", {
       method: "POST",
       body: JSON.stringify(dto),
+    });
+  }
+
+  async listPendingHqInvites(tenantId?: string): Promise<PendingHqInviteDto[]> {
+    const query = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : "";
+    return this.request<PendingHqInviteDto[]>(`/api/tenants/hq-invites${query}`);
+  }
+
+  async revokePendingHqInvite(inviteId: string): Promise<PendingHqInviteDto> {
+    return this.request<PendingHqInviteDto>(`/api/tenants/hq-invites/${inviteId}/revoke`, {
+      method: "POST",
     });
   }
 }
