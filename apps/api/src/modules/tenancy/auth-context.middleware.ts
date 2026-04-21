@@ -1,7 +1,6 @@
 import { Injectable, type NestMiddleware } from "@nestjs/common";
 import type { Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
-import type { UserRole } from "../../entities/user-membership.entity";
 import { getJwtSecret } from "../auth/jwt-secret";
 import type { AuthContext, RequestWithAuth } from "./auth-context";
 
@@ -35,17 +34,15 @@ export class AuthContextMiddleware implements NestMiddleware {
       }
     }
     const tenantId = req.header("x-tenant-id")?.trim();
-    const rolesHeader = req.header("x-roles") ?? req.header("x-role");
     const branchIdsHeader = req.header("x-branch-ids");
     const activeBranchId = req.header("x-active-branch-id")?.trim();
 
-    const roles = parseCsv(rolesHeader) as UserRole[];
     const branchIds = parseCsv(branchIdsHeader);
 
     const authContext: AuthContext = {
       userId: userId || undefined,
       tenantId: tenantId || undefined,
-      roles,
+      roles: [],
       branchIds,
       activeBranchId: activeBranchId || undefined,
     };
