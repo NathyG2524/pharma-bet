@@ -136,7 +136,7 @@ export default function OrganizationPage() {
     try {
       await navigator.clipboard.writeText(latestHqInviteUrl);
     } catch {
-      setError("Failed to copy invite link");
+      setError("Failed to copy invite link to clipboard. Please copy it manually.");
     }
   };
 
