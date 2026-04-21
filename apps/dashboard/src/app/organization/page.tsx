@@ -2,7 +2,7 @@
 
 import { branchesApi, tenantsApi } from "@/lib/api";
 import { useAuthContext } from "@/lib/auth-context";
-import type { BranchDto, TenantDto, UserRole } from "@drug-store/shared";
+import type { BranchDto, PendingHqInviteDto, TenantDto, UserRole } from "@drug-store/shared";
 import {
   Alert,
   Button,
@@ -28,8 +28,11 @@ export default function OrganizationPage() {
   const [tenants, setTenants] = useState<TenantDto[]>([]);
   const [branches, setBranches] = useState<BranchDto[]>([]);
   const [tenantName, setTenantName] = useState("");
+  const [hqAdminEmail, setHqAdminEmail] = useState("");
   const [branchName, setBranchName] = useState("");
   const [branchCode, setBranchCode] = useState("");
+  const [pendingHqInvites, setPendingHqInvites] = useState<PendingHqInviteDto[]>([]);
+  const [latestHqInviteUrl, setLatestHqInviteUrl] = useState<string | null>(null);
   const [assignmentUserId, setAssignmentUserId] = useState("");
   const [assignmentRole, setAssignmentRole] = useState<UserRole>("branch_user");
   const [assignmentBranchId, setAssignmentBranchId] = useState("");
@@ -58,6 +61,15 @@ export default function OrganizationPage() {
     }
   }, [state.tenantId]);
 
+  const refreshPendingHqInvites = useCallback(async () => {
+    try {
+      const data = await tenantsApi.listPendingHqInvites();
+      setPendingHqInvites(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load pending HQ invites");
+    }
+  }, []);
+
   useEffect(() => {
     refreshTenants();
   }, [refreshTenants]);
@@ -65,6 +77,10 @@ export default function OrganizationPage() {
   useEffect(() => {
     refreshBranches();
   }, [refreshBranches]);
+
+  useEffect(() => {
+    refreshPendingHqInvites();
+  }, [refreshPendingHqInvites]);
 
   useEffect(() => {
     if (branches.length && !assignmentBranchId) {
@@ -76,18 +92,36 @@ export default function OrganizationPage() {
 
   const handleTenantCreate = async () => {
     setError(null);
-    if (!tenantName.trim()) return;
+    const trimmedName = tenantName.trim();
+    const trimmedEmail = hqAdminEmail.trim().toLowerCase();
+    if (!trimmedName || !trimmedEmail) return;
     setLoading(true);
     try {
       const created = await tenantsApi.createTenant({
-        name: tenantName.trim(),
-        hqAdminUserId: state.userId,
+        name: trimmedName,
+        hqAdminEmail: trimmedEmail,
       });
       setTenantName("");
-      setTenants((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setHqAdminEmail("");
+      setLatestHqInviteUrl(created.invite.url);
+      setTenants((prev) => [...prev, created.tenant].sort((a, b) => a.name.localeCompare(b.name)));
+      setPendingHqInvites((prev) => [created.invite, ...prev]);
       window.dispatchEvent(new Event("tenants:refresh"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create tenant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokePendingInvite = async (inviteId: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const revoked = await tenantsApi.revokePendingHqInvite(inviteId);
+      setPendingHqInvites((prev) => prev.filter((invite) => invite.id !== revoked.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to revoke invite");
     } finally {
       setLoading(false);
     }
@@ -194,7 +228,7 @@ export default function OrganizationPage() {
           <CardTitle>Provision tenant</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+          <div className="grid gap-4 md:grid-cols-[2fr_2fr_1fr]">
             <div>
               <label
                 htmlFor="tenant-name"
@@ -209,15 +243,96 @@ export default function OrganizationPage() {
                 placeholder="New tenant name"
               />
             </div>
+            <div>
+              <label
+                htmlFor="hq-admin-email"
+                className="mb-1.5 block text-sm font-medium text-gray-700"
+              >
+                First HQ admin email
+              </label>
+              <Input
+                id="hq-admin-email"
+                type="email"
+                value={hqAdminEmail}
+                onChange={(e) => setHqAdminEmail(e.target.value)}
+                placeholder="hq.admin@example.com"
+              />
+            </div>
             <Button type="button" onClick={handleTenantCreate} disabled={loading}>
               Create tenant
             </Button>
           </div>
+          {latestHqInviteUrl ? (
+            <div className="rounded-lg border border-outline_variant/30 bg-surface_container_low px-3 py-2 text-xs text-on_surface_variant">
+              Latest HQ invite link:{" "}
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+                onClick={() => void navigator.clipboard.writeText(latestHqInviteUrl)}
+              >
+                Copy link
+              </button>
+            </div>
+          ) : null}
           {tenants.length > 0 && (
             <div className="text-xs text-on_surface_variant">
               {tenants.length} tenant(s) available
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending HQ admin invites</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="overflow-x-auto rounded-lg bg-surface_container_lowest">
+            <table className="w-full text-left text-sm text-on_surface_variant">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                    Tenant
+                  </th>
+                  <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                    Expires
+                  </th>
+                  <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.05rem]">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingHqInvites.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-4 text-center text-on_surface_variant">
+                      No pending HQ invites.
+                    </td>
+                  </tr>
+                ) : (
+                  pendingHqInvites.map((invite) => (
+                    <tr key={invite.id} className="hover:bg-surface_container_high">
+                      <td className="px-4 py-3 text-on_surface">{invite.email}</td>
+                      <td className="px-4 py-3">{invite.tenantId}</td>
+                      <td className="px-4 py-3">{new Date(invite.expiresAt).toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <Button
+                          type="button"
+                          onClick={() => void handleRevokePendingInvite(invite.id)}
+                          disabled={loading}
+                        >
+                          Revoke
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
