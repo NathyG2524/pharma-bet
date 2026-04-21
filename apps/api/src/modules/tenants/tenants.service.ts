@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash, randomBytes } from "node:crypto";
 import { In, IsNull, MoreThan, type Repository } from "typeorm";
@@ -74,7 +81,14 @@ export class TenantsService {
 
     const token = randomBytes(32).toString("hex");
     const tokenHash = createHash("sha256").update(token).digest("hex");
-    const inviteTtlHours = Number(process.env.INVITE_TTL_HOURS ?? DEFAULT_INVITE_TTL_HOURS);
+    const parsedInviteTtlHours = Number.parseInt(
+      process.env.INVITE_TTL_HOURS ?? String(DEFAULT_INVITE_TTL_HOURS),
+      10,
+    );
+    const inviteTtlHours =
+      Number.isFinite(parsedInviteTtlHours) && parsedInviteTtlHours > 0
+        ? parsedInviteTtlHours
+        : DEFAULT_INVITE_TTL_HOURS;
     const expiresAt = new Date(Date.now() + inviteTtlHours * 60 * 60 * 1000);
     const invite = await this.inviteRepo.save(
       this.inviteRepo.create({
@@ -91,8 +105,11 @@ export class TenantsService {
     );
 
     const baseUrl = (process.env.BASE_URL ?? "").trim().replace(/\/$/, "");
+    if (!baseUrl) {
+      throw new InternalServerErrorException("BASE_URL must be configured for invite links");
+    }
     const invitePath = `/invite/${token}`;
-    const inviteUrl = baseUrl ? `${baseUrl}${invitePath}` : invitePath;
+    const inviteUrl = `${baseUrl}${invitePath}`;
 
     await this.auditEventsService.recordEvent({
       tenantId: tenant.id,
