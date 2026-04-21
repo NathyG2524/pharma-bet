@@ -160,3 +160,5 @@ export { TaxesApi, taxesApi } from "./lib/taxesApi";
 export { SalesApi, salesApi } from "./lib/salesApi";
 export { TransfersApi, transfersApi } from "./lib/transfersApi";
 export { AuthApi, authApi } from "./lib/authApi";
+export { InvitesApi, invitesApi } from "./lib/invitesApi";
+export type { InviteLookupDto, AcceptInviteInput } from "./lib/invitesApi";

@@ -2,10 +2,11 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdjustmentsModule } from "./modules/adjustments/adjustments.module";
 import { ApprovalsModule } from "./modules/approvals/approvals.module";
-import { AuthModule } from "./modules/auth/auth.module";
 import { AuditEventsModule } from "./modules/audit-events/audit-events.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { InventoryModule } from "./modules/inventory/inventory.module";
+import { InvitesModule } from "./modules/invites/invites.module";
 import { MedicinesModule } from "./modules/medicines/medicines.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PatientsModule } from "./modules/patients/patients.module";
@@ -26,6 +27,7 @@ import { typeOrmConfig } from "./typeorm-config";
     AuthModule,
     TenancyModule,
     TenantsModule,
+    InvitesModule,
     AuditEventsModule,
     ApprovalsModule,
     BranchesModule,

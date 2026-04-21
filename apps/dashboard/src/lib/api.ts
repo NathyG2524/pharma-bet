@@ -5,6 +5,7 @@ import {
   authApi,
   branchesApi,
   inventoryApi,
+  invitesApi,
   medicinesApi,
   notificationsApi,
   patientsApi,
@@ -27,6 +28,7 @@ const apiUrl =
 
 if (apiUrl) {
   authApi.configure({ apiBaseUrl: apiUrl });
+  invitesApi.configure({ apiBaseUrl: apiUrl });
   const options = { apiBaseUrl: apiUrl, getAuthHeaders };
   patientsApi.configure(options);
   medicinesApi.configure(options);
@@ -64,4 +66,5 @@ export {
   approvalsApi,
   supplierReturnsApi,
   authApi,
+  invitesApi,
 };
