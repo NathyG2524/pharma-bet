@@ -1,4 +1,3 @@
-import * as bcrypt from "bcrypt";
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInterface {
@@ -53,68 +52,6 @@ export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInt
     );
     await queryRunner.query(
       `CREATE INDEX IF NOT EXISTS "IDX_invites_open_lookup" ON "invites" ("tenantId", "role", "expiresAt") WHERE "consumedAt" IS NULL AND "revokedAt" IS NULL`,
-    );
-
-    const platformTenantName = process.env.PLATFORM_TENANT_NAME?.trim() || "Platform";
-    const platformOwnerEmail =
-      process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase() || "platform.owner@pharma.local";
-    const platformOwnerPasswordHashFromEnv = process.env.PLATFORM_OWNER_PASSWORD_HASH?.trim();
-    const platformOwnerPasswordFromEnv = process.env.PLATFORM_OWNER_PASSWORD;
-
-    const tenantRows = await queryRunner.query(
-      `SELECT "id" FROM "tenants" WHERE "name" = $1 LIMIT 1`,
-      [platformTenantName],
-    );
-    const tenantId =
-      tenantRows[0]?.id ??
-      (
-        await queryRunner.query(`INSERT INTO "tenants" ("name") VALUES ($1) RETURNING "id"`, [
-          platformTenantName,
-        ])
-      )[0].id;
-
-    const userRows = await queryRunner.query(
-      `SELECT "id", "platformAdmin" FROM "users" WHERE "email" = $1 LIMIT 1`,
-      [platformOwnerEmail],
-    );
-    if (!userRows[0]?.id && !platformOwnerPasswordHashFromEnv && !platformOwnerPasswordFromEnv) {
-      throw new Error(
-        "Platform owner seed requires PLATFORM_OWNER_PASSWORD_HASH or PLATFORM_OWNER_PASSWORD when user is missing",
-      );
-    }
-
-    const platformOwnerPasswordHash =
-      platformOwnerPasswordHashFromEnv ||
-      (platformOwnerPasswordFromEnv ? await bcrypt.hash(platformOwnerPasswordFromEnv, 10) : undefined);
-    const ownerUserId =
-      userRows[0]?.id ??
-      (
-        await queryRunner.query(
-          `INSERT INTO "users" ("email", "passwordHash", "platformAdmin") VALUES ($1, $2, true) RETURNING "id"`,
-          [platformOwnerEmail, platformOwnerPasswordHash],
-        )
-      )[0].id;
-
-    if (userRows[0]?.id && userRows[0].platformAdmin !== true) {
-      await queryRunner.query(`UPDATE "users" SET "platformAdmin" = true WHERE "id" = $1`, [
-        ownerUserId,
-      ]);
-    }
-
-    await queryRunner.query(
-      `
-        INSERT INTO "user_memberships" ("tenantId", "branchId", "userId", "role")
-        SELECT $1, NULL, $2, 'platform_admin'
-        WHERE NOT EXISTS (
-          SELECT 1
-          FROM "user_memberships"
-          WHERE "tenantId" = $1
-            AND "userId" = $2
-            AND "role" = 'platform_admin'
-            AND "branchId" IS NULL
-        )
-      `,
-      [tenantId, ownerUserId],
     );
   }
 

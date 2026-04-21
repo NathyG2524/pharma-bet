@@ -19,11 +19,13 @@ import { TaxesModule } from "./modules/taxes/taxes.module";
 import { TenancyModule } from "./modules/tenancy/tenancy.module";
 import { TenantsModule } from "./modules/tenants/tenants.module";
 import { TransfersModule } from "./modules/transfers/transfers.module";
+import { SeedsModule } from "./seeds/seeds.module";
 import { typeOrmConfig } from "./typeorm-config";
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
+    SeedsModule,
     AuthModule,
     TenancyModule,
     TenantsModule,
