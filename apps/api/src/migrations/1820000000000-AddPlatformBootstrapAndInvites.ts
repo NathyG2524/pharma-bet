@@ -37,6 +37,7 @@ export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInt
             AND "branchId" IS NOT NULL
           ) OR (
             "role" NOT IN ('branch_manager', 'branch_user')
+            AND "branchId" IS NULL
           )
         )
       )
@@ -54,14 +55,11 @@ export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInt
       `CREATE INDEX IF NOT EXISTS "IDX_invites_open_lookup" ON "invites" ("tenantId", "role", "expiresAt") WHERE "consumedAt" IS NULL AND "revokedAt" IS NULL`,
     );
 
-    const platformTenantName = (process.env.PLATFORM_TENANT_NAME ?? "Platform").trim() || "Platform";
+    const platformTenantName = process.env.PLATFORM_TENANT_NAME?.trim() || "Platform";
     const platformOwnerEmail =
-      (process.env.PLATFORM_OWNER_EMAIL ?? "platform.owner@pharma.local").trim().toLowerCase() ||
-      "platform.owner@pharma.local";
+      process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase() || "platform.owner@pharma.local";
     const platformOwnerPasswordHashFromEnv = process.env.PLATFORM_OWNER_PASSWORD_HASH?.trim();
-    const platformOwnerPassword = process.env.PLATFORM_OWNER_PASSWORD ?? "ChangeMe123!";
-    const platformOwnerPasswordHash =
-      platformOwnerPasswordHashFromEnv || (await bcrypt.hash(platformOwnerPassword, 10));
+    const platformOwnerPasswordFromEnv = process.env.PLATFORM_OWNER_PASSWORD;
 
     const tenantRows = await queryRunner.query(
       `SELECT "id" FROM "tenants" WHERE "name" = $1 LIMIT 1`,
@@ -75,9 +73,19 @@ export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInt
         ])
       )[0].id;
 
-    const userRows = await queryRunner.query(`SELECT "id" FROM "users" WHERE "email" = $1 LIMIT 1`, [
-      platformOwnerEmail,
-    ]);
+    const userRows = await queryRunner.query(
+      `SELECT "id", "platformAdmin" FROM "users" WHERE "email" = $1 LIMIT 1`,
+      [platformOwnerEmail],
+    );
+    if (!userRows[0]?.id && !platformOwnerPasswordHashFromEnv && !platformOwnerPasswordFromEnv) {
+      throw new Error(
+        "Platform owner seed requires PLATFORM_OWNER_PASSWORD_HASH or PLATFORM_OWNER_PASSWORD when user is missing",
+      );
+    }
+
+    const platformOwnerPasswordHash =
+      platformOwnerPasswordHashFromEnv ||
+      (platformOwnerPasswordFromEnv ? await bcrypt.hash(platformOwnerPasswordFromEnv, 10) : undefined);
     const ownerUserId =
       userRows[0]?.id ??
       (
@@ -87,7 +95,11 @@ export class AddPlatformBootstrapAndInvites1820000000000 implements MigrationInt
         )
       )[0].id;
 
-    await queryRunner.query(`UPDATE "users" SET "platformAdmin" = true WHERE "id" = $1`, [ownerUserId]);
+    if (userRows[0]?.id && userRows[0].platformAdmin !== true) {
+      await queryRunner.query(`UPDATE "users" SET "platformAdmin" = true WHERE "id" = $1`, [
+        ownerUserId,
+      ]);
+    }
 
     await queryRunner.query(
       `
