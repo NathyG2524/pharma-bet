@@ -6,9 +6,11 @@ import { IsNull, MoreThan, type Repository } from "typeorm";
 import { Invite } from "../../entities/invite.entity";
 import { UserMembership } from "../../entities/user-membership.entity";
 import { User } from "../../entities/user.entity";
-import type { AuditEventsService } from "../audit-events/audit-events.service";
+// biome-ignore lint/style/useImportType: NestJS DI requires a runtime import for reflect-metadata injection
+import { AuditEventsService } from "../audit-events/audit-events.service";
 import type { AuthResponse } from "../auth/auth.service";
-import type { AuthService } from "../auth/auth.service";
+// biome-ignore lint/style/useImportType: NestJS DI requires a runtime import for reflect-metadata injection
+import { AuthService } from "../auth/auth.service";
 import type { AcceptInviteDto } from "./dto/accept-invite.dto";
 
 export type InviteLookup = {
