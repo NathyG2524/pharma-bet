@@ -1,5 +1,31 @@
 # PRD: Multi-tenant pharmacy management and inventory
 
+## Vertical slices (implementation issues)
+
+This PRD is implemented through linked vertical-slice issues. Keep this PRD issue open as the parent reference while slices are completed.
+
+| # | Title |
+|---|--------|
+| [#2](https://github.com/NathyG2524/pharma-bet/issues/2) | Multi-tenant shell |
+| [#3](https://github.com/NathyG2524/pharma-bet/issues/3) | Audit log |
+| [#4](https://github.com/NathyG2524/pharma-bet/issues/4) | Tenant-scoped patients |
+| [#5](https://github.com/NathyG2524/pharma-bet/issues/5) | Canonical catalog + overlays |
+| [#6](https://github.com/NathyG2524/pharma-bet/issues/6) | Draft products + promote + dedupe |
+| [#7](https://github.com/NathyG2524/pharma-bet/issues/7) | HQ suppliers + mapping |
+| [#8](https://github.com/NathyG2524/pharma-bet/issues/8) | Tax on PO lines |
+| [#9](https://github.com/NathyG2524/pharma-bet/issues/9) | Notifications |
+| [#10](https://github.com/NathyG2524/pharma-bet/issues/10) | Purchase orders + branch approval |
+| [#11](https://github.com/NathyG2524/pharma-bet/issues/11) | Receiving + lots |
+| [#12](https://github.com/NathyG2524/pharma-bet/issues/12) | Lot quarantine / recall |
+| [#13](https://github.com/NathyG2524/pharma-bet/issues/13) | OTC sale FEFO + tax + COGS |
+| [#14](https://github.com/NathyG2524/pharma-bet/issues/14) | Patient-required sale rules |
+| [#15](https://github.com/NathyG2524/pharma-bet/issues/15) | Inter-branch transfers |
+| [#16](https://github.com/NathyG2524/pharma-bet/issues/16) | Approval orchestration |
+| [#17](https://github.com/NathyG2524/pharma-bet/issues/17) | Adjustments + stock counts |
+| [#18](https://github.com/NathyG2524/pharma-bet/issues/18) | Supplier returns |
+| [#19](https://github.com/NathyG2524/pharma-bet/issues/19) | Baseline reporting |
+| [#20](https://github.com/NathyG2524/pharma-bet/issues/20) | Online-first UX |
+
 ## Problem Statement
 
 Pharmacy groups need to run **inventory and purchasing** across **many branches** without losing **traceability, financial accuracy, or operational control**. Today the product behaves like a **single global catalog**: each medicine carries one **aggregate stock** number, **buy/sell** transactions adjust that total **without lots or per-branch balances**, and there is **no tenant isolation**, **no branch model**, **no supplier or purchase-order lifecycle**, **no inter-branch transfers**, **no approval workflows** for sensitive stock movements, **no append-only audit trail**, or **line-level tax** modeling.
