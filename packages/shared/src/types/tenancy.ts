@@ -57,3 +57,27 @@ export interface AssignMembershipInput {
   role: UserRole;
   branchId?: string | null;
 }
+
+export type BranchInviteRole = "branch_manager" | "branch_user";
+
+export interface CreateBranchInviteInput {
+  email: string;
+  branchId: string;
+  role: BranchInviteRole;
+}
+
+export interface PendingBranchInviteDto {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  email: string;
+  role: BranchInviteRole;
+  expiresAt: string;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface CreateBranchInviteResultDto {
+  invite: PendingBranchInviteDto;
+  url: string;
+}

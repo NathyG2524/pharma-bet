@@ -3,6 +3,7 @@ import { test } from "node:test";
 import type { Repository } from "typeorm";
 import type { AuditEvent } from "../../entities/audit-event.entity";
 import type { Branch } from "../../entities/branch.entity";
+import type { Invite } from "../../entities/invite.entity";
 import type { UserMembership } from "../../entities/user-membership.entity";
 import { UserRole } from "../../entities/user-membership.entity";
 import { BranchesService } from "../branches/branches.service";
@@ -21,6 +22,7 @@ test("creates a single audit event when a branch is created", async () => {
     save: async (data) => ({ ...data, id: "branch-123" }) as Branch,
   };
   const membershipRepo = {} as Repository<UserMembership>;
+  const inviteRepo = {} as Repository<Invite>;
   const auditEvents: AuditEventInput[] = [];
   const auditEventsService = {
     recordEvent: async (input: AuditEventInput) => {
@@ -31,6 +33,7 @@ test("creates a single audit event when a branch is created", async () => {
   const service = new BranchesService(
     branchRepo as Repository<Branch>,
     membershipRepo,
+    inviteRepo,
     auditEventsService as unknown as AuditEventsService,
   );
 

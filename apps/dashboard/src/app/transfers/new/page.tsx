@@ -238,7 +238,7 @@ export default function NewTransferPage() {
                       />
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="tertiary"
                         disabled={!canManageTransfers || lines.length === 1}
                         onClick={() =>
                           setLines((prev) => prev.filter((item) => item.id !== line.id))

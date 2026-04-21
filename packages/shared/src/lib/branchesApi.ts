@@ -2,7 +2,10 @@ import type {
   AssignMembershipInput,
   BranchDto,
   CreateBranchInput,
+  CreateBranchInviteInput,
+  CreateBranchInviteResultDto,
   MembershipDto,
+  PendingBranchInviteDto,
 } from "../types/tenancy";
 
 export class BranchesApi {
@@ -53,6 +56,23 @@ export class BranchesApi {
     return this.request<MembershipDto>("/api/memberships", {
       method: "POST",
       body: JSON.stringify(dto),
+    });
+  }
+
+  async listPendingBranchInvites(): Promise<PendingBranchInviteDto[]> {
+    return this.request<PendingBranchInviteDto[]>("/api/branches/invites");
+  }
+
+  async createBranchInvite(dto: CreateBranchInviteInput): Promise<CreateBranchInviteResultDto> {
+    return this.request<CreateBranchInviteResultDto>("/api/branches/invites", {
+      method: "POST",
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async revokeBranchInvite(inviteId: string): Promise<PendingBranchInviteDto> {
+    return this.request<PendingBranchInviteDto>(`/api/branches/invites/${inviteId}/revoke`, {
+      method: "POST",
     });
   }
 }
