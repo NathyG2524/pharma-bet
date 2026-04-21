@@ -13,7 +13,8 @@
     "typeorm:cli": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d ./src/typeorm-config.ts",
     "migration:run": "pnpm run typeorm:cli migration:run",
     "migration:generate": "pnpm run build && pnpm run typeorm:cli migration:generate src/migrations/AddPatientTables",
-    "migration:revert": "pnpm run typeorm:cli migration:revert"
+    "migration:revert": "pnpm run typeorm:cli migration:revert",
+    "seed": "ts-node -r tsconfig-paths/register ./src/seeds/run-seeds.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.16",
