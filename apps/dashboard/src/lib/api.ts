@@ -11,6 +11,7 @@ import {
   patientsApi,
   purchaseOrdersApi,
   salesApi,
+  sessionApi,
   stockCountsApi,
   supplierReturnsApi,
   suppliersApi,
@@ -29,6 +30,7 @@ const apiUrl =
 if (apiUrl) {
   authApi.configure({ apiBaseUrl: apiUrl });
   invitesApi.configure({ apiBaseUrl: apiUrl });
+  sessionApi.configure({ apiBaseUrl: apiUrl, getAuthHeaders });
   const options = { apiBaseUrl: apiUrl, getAuthHeaders };
   patientsApi.configure(options);
   medicinesApi.configure(options);
@@ -67,4 +69,5 @@ export {
   supplierReturnsApi,
   authApi,
   invitesApi,
+  sessionApi,
 };

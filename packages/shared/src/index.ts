@@ -66,6 +66,19 @@ export type {
 } from "./types/tenancy";
 export type { AuthResponseDto, AuthUserDto } from "./types/auth";
 export type {
+  SessionBootstrapDto,
+  SessionMembershipDto,
+  SessionTenantDto,
+} from "./types/session";
+export {
+  autoSelectBranchId,
+  branchIdsForTenant,
+  distinctBranchIds,
+  needsBranchSelectionStep,
+  rolesForTenant,
+  tenantHasHqWideAccess,
+} from "./lib/tenant-wizard";
+export type {
   CreatePoPendingBranchApprovalNotificationInput,
   NotificationDispatchResult,
   NotificationDto,
@@ -164,5 +177,6 @@ export { TaxesApi, taxesApi } from "./lib/taxesApi";
 export { SalesApi, salesApi } from "./lib/salesApi";
 export { TransfersApi, transfersApi } from "./lib/transfersApi";
 export { AuthApi, authApi } from "./lib/authApi";
+export { SessionApi, sessionApi } from "./lib/sessionApi";
 export { InvitesApi, invitesApi } from "./lib/invitesApi";
 export type { InviteLookupDto, AcceptInviteInput } from "./lib/invitesApi";

@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 // biome-ignore lint/style/useImportType: NestJS DI requires a runtime import for reflect-metadata injection
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -24,6 +29,17 @@ export class AuthService {
     return email.trim().toLowerCase();
   }
 
+  /** Production disables open registration unless `ALLOW_OPEN_REGISTRATION=true`. Non-production allows unless `ALLOW_OPEN_REGISTRATION=false`. */
+  private assertOpenRegistrationAllowed(): void {
+    const isProd = process.env.NODE_ENV === "production";
+    const allow =
+      (!isProd && process.env.ALLOW_OPEN_REGISTRATION !== "false") ||
+      (isProd && process.env.ALLOW_OPEN_REGISTRATION === "true");
+    if (!allow) {
+      throw new ForbiddenException("Open registration is disabled. Use an invite link to join.");
+    }
+  }
+
   async signToken(user: User): Promise<string> {
     return this.jwtService.signAsync({
       sub: user.id,
@@ -36,6 +52,7 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
+    this.assertOpenRegistrationAllowed();
     const email = this.normalizeEmail(dto.email);
     const exists = await this.usersRepo.exists({ where: { email } });
     if (exists) {

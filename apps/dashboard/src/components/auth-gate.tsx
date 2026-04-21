@@ -13,13 +13,26 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!state.accessToken) {
       const next = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
       router.replace(`/login${next}`);
+      return;
     }
-  }, [state.accessToken, pathname, router]);
+    if (state.onboardingComplete === false) {
+      const next = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
+      router.replace(`/choose-tenant${next}`);
+    }
+  }, [state.accessToken, state.onboardingComplete, pathname, router]);
 
   if (!state.accessToken) {
     return (
       <div className="flex min-h-screen flex-1 items-center justify-center bg-surface">
         <p className="text-sm text-on_surface_variant">Signing in…</p>
+      </div>
+    );
+  }
+
+  if (state.onboardingComplete === false) {
+    return (
+      <div className="flex min-h-screen flex-1 items-center justify-center bg-surface">
+        <p className="text-sm text-on_surface_variant">Choose your organization…</p>
       </div>
     );
   }

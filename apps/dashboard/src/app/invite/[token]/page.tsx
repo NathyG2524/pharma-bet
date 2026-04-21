@@ -47,8 +47,9 @@ export default function AcceptInvitePage() {
         roles: [],
         branchIds: [],
         activeBranchId: null,
+        onboardingComplete: false,
       });
-      router.replace("/");
+      router.replace("/choose-tenant");
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to accept invite");
     } finally {
