@@ -8,7 +8,10 @@ import { usePathname } from "next/navigation";
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAuthRoute =
-    pathname === "/login" || pathname === "/register" || pathname.startsWith("/invite/");
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/choose-tenant" ||
+    pathname.startsWith("/invite/");
 
   if (isAuthRoute) {
     return (

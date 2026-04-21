@@ -7,6 +7,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const allowRegisterUi =
+  process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_ENABLE_REGISTER === "true";
+
 export default function RegisterPage() {
   const { state, updateState } = useAuthContext();
   const router = useRouter();
@@ -17,13 +20,21 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (state.accessToken) {
-      router.replace("/");
+    if (!allowRegisterUi) {
+      router.replace("/login");
     }
-  }, [state.accessToken, router]);
+  }, [router]);
+
+  useEffect(() => {
+    if (state.accessToken) {
+      const q = "";
+      router.replace(state.onboardingComplete === false ? `/choose-tenant${q}` : "/");
+    }
+  }, [state.accessToken, state.onboardingComplete, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allowRegisterUi) return;
     setError(null);
     setLoading(true);
     try {
@@ -36,14 +47,23 @@ export default function RegisterPage() {
         roles: [],
         branchIds: [],
         activeBranchId: null,
+        onboardingComplete: false,
       });
-      router.replace("/");
+      router.replace("/choose-tenant");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
   };
+
+  if (!allowRegisterUi) {
+    return (
+      <p className="text-sm text-on_surface_variant" aria-live="polite">
+        Redirecting…
+      </p>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md border border-outline_variant/15 shadow-tonal">

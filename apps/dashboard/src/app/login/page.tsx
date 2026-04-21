@@ -20,9 +20,10 @@ function LoginForm() {
 
   useEffect(() => {
     if (state.accessToken) {
-      router.replace(next.startsWith("/") ? next : "/");
+      const q = next && next !== "/" ? `?next=${encodeURIComponent(next)}` : "";
+      router.replace(state.onboardingComplete === false ? `/choose-tenant${q}` : next);
     }
-  }, [state.accessToken, next, router]);
+  }, [state.accessToken, state.onboardingComplete, next, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +39,10 @@ function LoginForm() {
         roles: [],
         branchIds: [],
         activeBranchId: null,
+        onboardingComplete: false,
       });
-      router.replace(next.startsWith("/") ? next : "/");
+      const q = next && next !== "/" ? `?next=${encodeURIComponent(next)}` : "";
+      router.replace(`/choose-tenant${q}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -91,12 +94,15 @@ function LoginForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
-          <p className="text-center text-sm text-on_surface_variant">
-            No account?{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              Register
-            </Link>
-          </p>
+          {(process.env.NODE_ENV !== "production" ||
+            process.env.NEXT_PUBLIC_ENABLE_REGISTER === "true") && (
+            <p className="text-center text-sm text-on_surface_variant">
+              No account?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Register
+              </Link>
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>

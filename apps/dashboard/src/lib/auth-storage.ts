@@ -8,6 +8,8 @@ export type DevAuthState = {
   roles: UserRole[];
   branchIds: string[];
   activeBranchId?: string | null;
+  /** False until user finishes /choose-tenant (tenant + optional branch). */
+  onboardingComplete: boolean;
 };
 
 const STORAGE_KEY = "pharma-dev-auth";
@@ -20,6 +22,7 @@ const defaultState: DevAuthState = {
   roles: [],
   branchIds: [],
   activeBranchId: null,
+  onboardingComplete: true,
 };
 
 export const readAuthState = (): DevAuthState => {
@@ -40,6 +43,12 @@ export const readAuthState = (): DevAuthState => {
       typeof parsed.accessToken === "string" && parsed.accessToken.length > 0
         ? parsed.accessToken
         : null;
+    const hasLegacyTenant =
+      typeof parsed.tenantId === "string" && parsed.tenantId.trim().length > 0;
+    const onboardingComplete =
+      typeof parsed.onboardingComplete === "boolean"
+        ? parsed.onboardingComplete
+        : hasLegacyTenant;
     return {
       ...defaultState,
       ...parsed,
@@ -47,6 +56,7 @@ export const readAuthState = (): DevAuthState => {
       roles: Array.isArray(parsed.roles) ? (parsed.roles as UserRole[]) : defaultState.roles,
       branchIds: Array.isArray(parsed.branchIds) ? parsed.branchIds : defaultState.branchIds,
       activeBranchId: normalizedActiveBranchId,
+      onboardingComplete,
     };
   } catch {
     return defaultState;
