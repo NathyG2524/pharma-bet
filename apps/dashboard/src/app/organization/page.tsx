@@ -127,6 +127,15 @@ export default function OrganizationPage() {
     }
   };
 
+  const handleCopyLatestInviteLink = async () => {
+    if (!latestHqInviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(latestHqInviteUrl);
+    } catch {
+      setError("Failed to copy invite link");
+    }
+  };
+
   const handleBranchCreate = async () => {
     setError(null);
     if (!branchName.trim() || !state.tenantId) return;
@@ -268,7 +277,7 @@ export default function OrganizationPage() {
               <button
                 type="button"
                 className="font-medium text-primary hover:underline"
-                onClick={() => void navigator.clipboard.writeText(latestHqInviteUrl)}
+                onClick={() => void handleCopyLatestInviteLink()}
               >
                 Copy link
               </button>
